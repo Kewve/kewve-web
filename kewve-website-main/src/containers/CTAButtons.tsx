@@ -8,6 +8,7 @@ import { josefinSemiBold } from '@/utils';
 interface CTAButtonsProps {
   className?: string;
   supplierText?: string;
+  buyerText?: string;
 }
 
 function CTAButtons({ className, supplierText = 'Become a supplier' }: CTAButtonsProps) {
