@@ -1,0 +1,90 @@
+{
+  "format": "page",
+  "id": "our_story_page",
+  "label": "Our Story Page",
+  "repeatable": false,
+  "status": true,
+  "json": {
+    "Main": {
+      "page_title": {
+        "type": "Text",
+        "config": {
+          "label": "Page Title",
+          "placeholder": ""
+        }
+      },
+      "section_heading": {
+        "type": "Text",
+        "config": {
+          "label": "Section Heading",
+          "placeholder": ""
+        }
+      },
+      "section_description": {
+        "type": "StructuredText",
+        "config": {
+          "label": "Section Description",
+          "placeholder": "",
+          "allowTargetBlank": true,
+          "multi": "paragraph,preformatted,heading1,heading2,heading3,heading4,heading5,heading6,strong,em,hyperlink,image,embed,list-item,o-list-item,rtl"
+        }
+      },
+      "buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Buyer CTA",
+          "placeholder": ""
+        }
+      },
+      "supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Supplier CTA",
+          "placeholder": ""
+        }
+      },
+      "section_image": {
+        "type": "Image",
+        "config": {
+          "label": "Section Image",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "slices": {
+        "type": "Slices",
+        "fieldset": "Slice Zone",
+        "config": {
+          "choices": {}
+        }
+      }
+    },
+    "SEO & Metadata": {
+      "meta_description": {
+        "config": {
+          "label": "Meta Description",
+          "placeholder": "A brief summary of the page"
+        },
+        "type": "Text"
+      },
+      "meta_image": {
+        "config": {
+          "constraint": {
+            "height": 1260,
+            "width": 2400
+          },
+          "label": "Meta Image",
+          "thumbnails": []
+        },
+        "type": "Image"
+      },
+      "meta_title": {
+        "config": {
+          "label": "Meta Title",
+          "placeholder": "A title of the page used for social media and search engines"
+        },
+        "type": "Text"
+      }
+    }
+  }
+}

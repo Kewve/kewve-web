@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --orange: #ed722d;
+  --pink: #fb6bc8;
+  --pink-dark: #eb0e9d;
+  --white: #fff;
+  --black-muted: #3d3935;
+  --black: #000;
+}
+
+html,
+body {
+  overflow-x: hidden !important;
+}
+
+.text-with-shadow {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.spacing {
+  padding: 0 1.5rem;
+}
+
+.landing-hero {
+  background: radial-gradient(
+    circle closest-side,
+    #ed722d,
+    #ed722d
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.rich-text > p {
+  margin-bottom: 16px;
+}
+
+.blog img {
+  width: fit-content;
+  height: fit-content;
+  max-height: 600px;
+  object-fit: cover;
+  margin: 24px auto;
+  border-radius: 16px;
+}
+
+.blog h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--black);
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.blog h1,
+h2 {
+  font-size: 26px;
+}
+
+.blog h3 {
+  font-size: 22px;
+}
+
+.blog h4 {
+  font-size: 20px;
+}
+
+.blog h5 {
+  font-size: 18px;
+}
+
+.blog h6 {
+  font-size: 16px;
+}
+
+.blog p {
+  color: var(--black-muted);
+  font-size: 16px;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+
+.blog ol,
+ul {
+  margin-left: 20px;
+  padding-left: 20px;
+}
+
+.blog ol,
+ul li {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: var(--black-muted);
+  line-height: 1.8;
+}
+
+.blog .ol {
+  list-style: decimal;
+}
+
+.blog ol {
+  list-style: circle;
+}
+
+.blog a {
+  color: #ed722d;
+  text-decoration: underline;
+  font-size: 16px;
+}
+
+.terms {
+  color: var(--black-muted);
+}
+
+.terms p {
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--black-muted);
+  line-height: 2;
+}
+
+.terms h2 {
+  font-size: 22px;
+  margin: 16px 0;
+  color: #000;
+}
+
+.terms h3 {
+  font-size: 18px;
+  margin: 16px 0;
+  color: #000;
+}
+
+.terms ol {
+  margin-left: 20px;
+  padding-left: 20px;
+  list-style: decimal;
+}
+
+.terms ol li {
+  margin-bottom: 16px;
+  font-size: 16px;
+  color: var(--black-muted);
+  line-height: 2;
+}
+
+@media only screen and (max-width: 992px) {
+  .terms h2 {
+    font-size: 18px;
+    margin: 8px 0;
+  }
+  .terms h3 {
+    font-size: 16px;
+  }
+  .terms p {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .terms ol li {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+}

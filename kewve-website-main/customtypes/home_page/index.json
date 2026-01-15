@@ -1,0 +1,418 @@
+{
+  "format": "page",
+  "id": "home_page",
+  "label": "Home Page",
+  "repeatable": false,
+  "status": true,
+  "json": {
+    "Main": {
+      "title": {
+        "type": "Text",
+        "config": {
+          "label": "title",
+          "placeholder": ""
+        }
+      },
+      "subtitle": {
+        "type": "Text",
+        "config": {
+          "label": "Subtitle",
+          "placeholder": ""
+        }
+      },
+      "description": {
+        "type": "Text",
+        "config": {
+          "label": "description",
+          "placeholder": ""
+        }
+      },
+      "buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "buyer cta",
+          "placeholder": ""
+        }
+      },
+      "supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "supplier cta",
+          "placeholder": ""
+        }
+      },
+      "second_section_title": {
+        "type": "Text",
+        "config": {
+          "label": "second section title",
+          "placeholder": ""
+        }
+      },
+      "second_section_description": {
+        "type": "Text",
+        "config": {
+          "label": "second section description",
+          "placeholder": ""
+        }
+      },
+      "show_case_image_1": {
+        "type": "Image",
+        "config": {
+          "label": "Show Case Image 1",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "show_case_image_2": {
+        "type": "Image",
+        "config": {
+          "label": "Show Case Image 2",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "show_case_image_3": {
+        "type": "Image",
+        "config": {
+          "label": "Show Case Image 3",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "show_case_image_4": {
+        "type": "Image",
+        "config": {
+          "label": "Show Case Image 4",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "second_section_points": {
+        "type": "Group",
+        "config": {
+          "label": "second section points",
+          "repeat": true,
+          "fields": {
+            "icon": {
+              "type": "Image",
+              "config": {
+                "label": "icon",
+                "constraint": {},
+                "thumbnails": []
+              }
+            },
+            "heading": {
+              "type": "Text",
+              "config": {
+                "label": "heading",
+                "placeholder": ""
+              }
+            },
+            "description": {
+              "type": "Text",
+              "config": {
+                "label": "description",
+                "placeholder": ""
+              }
+            }
+          }
+        }
+      },
+      "second_section_buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Second Section Buyer CTA",
+          "placeholder": ""
+        }
+      },
+      "second_section_supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Second Section Supplier CTA",
+          "placeholder": ""
+        }
+      },
+      "third_section_title": {
+        "type": "Text",
+        "config": {
+          "label": "Third Section Title",
+          "placeholder": ""
+        }
+      },
+      "third_section_description": {
+        "type": "Text",
+        "config": {
+          "label": "Third Section Description",
+          "placeholder": ""
+        }
+      },
+      "third_section_points": {
+        "type": "Group",
+        "config": {
+          "label": "Third Section Points",
+          "repeat": true,
+          "fields": {
+            "icon": {
+              "type": "Image",
+              "config": {
+                "label": "icon",
+                "constraint": {},
+                "thumbnails": []
+              }
+            },
+            "heading": {
+              "type": "Text",
+              "config": {
+                "label": "heading",
+                "placeholder": ""
+              }
+            },
+            "description": {
+              "type": "Text",
+              "config": {
+                "label": "description",
+                "placeholder": ""
+              }
+            }
+          }
+        }
+      },
+      "third_section_buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Third Section Buyer CTA",
+          "placeholder": ""
+        }
+      },
+      "third_section_supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Third Section Supplier CTA",
+          "placeholder": ""
+        }
+      },
+      "third_section_image": {
+        "type": "Image",
+        "config": {
+          "label": "Third Section Image",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "fourth_section_title": {
+        "type": "Text",
+        "config": {
+          "label": "Fourth Section Title",
+          "placeholder": ""
+        }
+      },
+      "fourth_section_description": {
+        "type": "Text",
+        "config": {
+          "label": "Fourth Section Description",
+          "placeholder": ""
+        }
+      },
+      "fourth_section_image": {
+        "type": "Image",
+        "config": {
+          "label": "Fourth Section Image",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "fourth_section_buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Fourth Section Buyer CTA",
+          "placeholder": ""
+        }
+      },
+      "fourth_section_supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Fourth Section Supplier CTA",
+          "placeholder": ""
+        }
+      },
+      "fourth_section_points": {
+        "type": "Group",
+        "config": {
+          "label": "Fourth Section Points",
+          "repeat": true,
+          "fields": {
+            "icon": {
+              "type": "Image",
+              "config": {
+                "label": "icon",
+                "constraint": {},
+                "thumbnails": []
+              }
+            },
+            "heading": {
+              "type": "Text",
+              "config": {
+                "label": "heading",
+                "placeholder": ""
+              }
+            },
+            "description": {
+              "type": "Text",
+              "config": {
+                "label": "description",
+                "placeholder": ""
+              }
+            }
+          }
+        }
+      },
+      "fifth_section_title": {
+        "type": "Text",
+        "config": {
+          "label": "Fifth Section Title",
+          "placeholder": ""
+        }
+      },
+      "fifth_section_description": {
+        "type": "Text",
+        "config": {
+          "label": "Fifth Section Description",
+          "placeholder": ""
+        }
+      },
+      "fifth_section_image": {
+        "type": "Image",
+        "config": {
+          "label": "Fifth Section Image",
+          "constraint": {},
+          "thumbnails": []
+        }
+      },
+      "fifth_section_buyer_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Fifth Section Buyer CTA",
+          "placeholder": ""
+        }
+      },
+      "fifth_section_supplier_cta": {
+        "type": "Text",
+        "config": {
+          "label": "Fifth Section Supplier CTA",
+          "placeholder": ""
+        }
+      },
+      "fifth_section_points": {
+        "type": "Group",
+        "config": {
+          "label": "Fifth Section Points",
+          "repeat": true,
+          "fields": {
+            "icon": {
+              "type": "Image",
+              "config": {
+                "label": "icon",
+                "constraint": {},
+                "thumbnails": []
+              }
+            },
+            "heading": {
+              "type": "Text",
+              "config": {
+                "label": "heading",
+                "placeholder": ""
+              }
+            },
+            "description": {
+              "type": "Text",
+              "config": {
+                "label": "description",
+                "placeholder": ""
+              }
+            }
+          }
+        }
+      },
+      "contact_us_heading": {
+        "type": "Text",
+        "config": {
+          "label": "Contact us Heading",
+          "placeholder": ""
+        }
+      },
+      "contact_us_description": {
+        "type": "Text",
+        "config": {
+          "label": "Contact us Description",
+          "placeholder": ""
+        }
+      },
+      "contact_us_points": {
+        "type": "Group",
+        "config": {
+          "label": "Contact us Points",
+          "repeat": true,
+          "fields": {
+            "icon": {
+              "type": "Image",
+              "config": {
+                "label": "icon",
+                "constraint": {},
+                "thumbnails": []
+              }
+            },
+            "title": {
+              "type": "Text",
+              "config": {
+                "label": "title",
+                "placeholder": ""
+              }
+            },
+            "url": {
+              "type": "Link",
+              "config": {
+                "label": "url",
+                "placeholder": "",
+                "select": null
+              }
+            }
+          }
+        }
+      },
+      "slices": {
+        "type": "Slices",
+        "fieldset": "Slice Zone",
+        "config": {
+          "choices": {}
+        }
+      }
+    },
+    "SEO & Metadata": {
+      "meta_description": {
+        "config": {
+          "label": "Meta Description",
+          "placeholder": "A brief summary of the page"
+        },
+        "type": "Text"
+      },
+      "meta_image": {
+        "config": {
+          "constraint": {
+            "height": 1260,
+            "width": 2400
+          },
+          "label": "Meta Image",
+          "thumbnails": []
+        },
+        "type": "Image"
+      },
+      "meta_title": {
+        "config": {
+          "label": "Meta Title",
+          "placeholder": "A title of the page used for social media and search engines"
+        },
+        "type": "Text"
+      }
+    }
+  }
+}
