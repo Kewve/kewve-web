@@ -3,7 +3,7 @@
 import { sendEmail } from '@/utils/emailConfig';
 import { getWaitlistConfirmationEmailHTML, getWaitlistAdminNotificationHTML } from '@/utils/emailTemplate';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'kewveplatform@gmail.com';
 
 export const submitWaitlistForm = async (
