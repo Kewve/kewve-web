@@ -46,8 +46,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setUser(null);
       }
-    } catch (error) {
-      // Not authenticated
+    } catch (error: any) {
+      // Not authenticated or API error
+      console.error('Auth check error:', error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -55,12 +56,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await authAPI.login({ email, password });
-    if (response.success) {
-      setUser(response.data.user);
-      // Don't redirect here, let the component handle it
-    } else {
-      throw new Error('Login failed');
+    try {
+      const response = await authAPI.login({ email, password });
+      if (response.success) {
+        setUser(response.data.user);
+        // Don't redirect here, let the component handle it
+      } else {
+        throw new Error('Login failed');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(error.message || 'Failed to connect to server. Please check your connection.');
     }
   };
 
@@ -71,12 +77,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     businessName?: string;
     country?: string;
   }) => {
-    const response = await authAPI.register(data);
-    if (response.success) {
-      setUser(response.data.user);
-      router.push('/export-readiness/dashboard');
-    } else {
-      throw new Error('Registration failed');
+    try {
+      const response = await authAPI.register(data);
+      if (response.success) {
+        setUser(response.data.user);
+        router.push('/export-readiness/dashboard');
+      } else {
+        throw new Error('Registration failed');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      throw new Error(error.message || 'Failed to connect to server. Please check your connection.');
     }
   };
 

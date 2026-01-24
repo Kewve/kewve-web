@@ -6,7 +6,16 @@ export interface AuthRequest extends Request {
   user?: UserDocument;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+// Get JWT_SECRET lazily to allow dotenv.config() to run first
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      "JWT_SECRET is not set! Make sure you set it in your environment variables."
+    );
+  }
+  return secret;
+};
 
 export const authenticate = async (
   req: AuthRequest,
@@ -24,7 +33,7 @@ export const authenticate = async (
       return;
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string };
     const user = await User.findById(decoded.userId).select("+password");
 
     if (!user) {
@@ -53,5 +62,5 @@ export const authenticate = async (
 };
 
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "30d" });
+  return jwt.sign({ userId }, getJwtSecret(), { expiresIn: "30d" });
 };

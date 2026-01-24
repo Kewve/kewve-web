@@ -1,4 +1,24 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Get API URL - use environment variable or construct from current origin
+const getApiBaseUrl = (): string => {
+  // Always check environment variable first
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  if (typeof window !== 'undefined') {
+    // Client-side: construct API URL from current origin
+    const origin = window.location.origin;
+    // If on localhost, use localhost:5000
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return 'http://localhost:5000/api';
+    }
+    // For production, assume API is on same domain
+    return `${origin}/api`;
+  }
+  
+  // Server-side: default to localhost
+  return 'http://localhost:5000/api';
+};
 
 // Get auth token from localStorage
 const getToken = (): string | null => {
@@ -35,14 +55,32 @@ const apiRequest = async <T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const apiUrl = getApiBaseUrl();
+  const response = await fetch(`${apiUrl}${endpoint}`, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An error occurred' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    let errorMessage = `HTTP error! status: ${response.status}`;
+    try {
+      const error = await response.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      // If response is not JSON, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    
+    // Provide more helpful error messages
+    if (response.status === 0 || response.status === 500) {
+      errorMessage = 'Unable to connect to server. Please check if the backend is running.';
+    } else if (response.status === 401) {
+      errorMessage = 'Authentication failed. Please check your credentials.';
+    } else if (response.status === 404) {
+      errorMessage = 'API endpoint not found. Please check the API URL configuration.';
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -140,7 +178,8 @@ export const assessmentAPI = {
     const formData = new FormData();
     formData.append('document', file);
 
-    const response = await fetch(`${API_BASE_URL}/assessment/documents`, {
+    const apiUrl = getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/assessment/documents`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -149,8 +188,14 @@ export const assessmentAPI = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-      throw new Error(error.message || 'Upload failed');
+      let errorMessage = 'Upload failed';
+      try {
+        const error = await response.json();
+        errorMessage = error.message || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();

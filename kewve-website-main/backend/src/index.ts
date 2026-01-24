@@ -1,3 +1,13 @@
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from backend directory (two levels up from src/)
+dotenv.config({ path: resolve(__dirname, "..", ".env") });
+
 // Add error handling for unhandled rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise);
@@ -15,15 +25,6 @@ process.on('uncaughtException', (error) => {
 });
 
 import express from "express";
-import dotenv from "dotenv";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load .env from backend directory (two levels up from src/)
-dotenv.config({ path: resolve(__dirname, "..", ".env") });
 
 import waitlistRoutes from "./routes/waitlistRoute.js";
 import authRoutes from "./routes/authRoute.js";
@@ -45,11 +46,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-console.log("MONGODB_URI:", process.env.MONGODB_URI?.slice(0, 30));
-
-console.log("ENV CHECK:", {
-  MONGODB_URI: process.env.MONGODB_URI ? "FOUND" : "MISSING",
-});
+console.log("MONGODB_URI:", process.env.MONGODB_URI ? "FOUND" : "MISSING");
+console.log("JWT_SECRET:", process.env.JWT_SECRET ? "FOUND" : "MISSING");
+console.log("PORT:", process.env.PORT || 5000);
 
 
 
