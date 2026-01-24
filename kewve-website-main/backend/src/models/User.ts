@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import * as bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 
 export interface UserDocument extends Document {
   email: string;
@@ -50,13 +50,13 @@ const UserSchema = new Schema<UserDocument>(
 // Hash password before saving
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.default.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 // Compare password method
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  return await bcrypt.default.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Note: email index is automatically created by unique: true in the schema
