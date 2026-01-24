@@ -14,10 +14,10 @@ export const submitWaitlist = async (req: Request, res: Response) => {
     }
 
     // Validate exportInterest value
-    if (exportInterest !== "Yes" && exportInterest !== "Exploring") {
+    if (exportInterest !== "Yes" && exportInterest !== "Exploring" && exportInterest !== "No") {
       return res.status(400).json({
         success: false,
-        message: "exportInterest must be either 'Yes' or 'Exploring'"
+        message: "exportInterest must be either 'Yes', 'Exploring', or 'No'"
       });
     }
 

@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:backend": "nodemon --config backend/nodemon.json",
-    "dev:full": "concurrently \"next dev\" \"nodemon --config backend/nodemon.json\"",
+    "dev": "next dev -p 3000",
+    "dev:backend": "cd backend && nodemon src/index.ts",
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:backend\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

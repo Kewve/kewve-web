@@ -38,7 +38,7 @@ const WaitlistSchema = new Schema<WaitlistDocument>(
     exportInterest: {
       type: String,
       required: [true, "Export interest is required"],
-      enum: ["Yes", "Exploring"],
+      enum: ["Yes", "Exploring", "No"],
     },
   },
   {

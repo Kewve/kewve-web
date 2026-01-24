@@ -51,13 +51,13 @@ function WaitlistForm({ showcaseImage }: WaitlistFormProps) {
   return (
     <div id='waitlist-form' className='min-h-screen flex'>
       {/* Left Column - Form */}
-      <div className='w-full lg:w-1/2 bg-gradient-to-br from-orange via-yellow to-orange p-8 lg:p-12 xl:p-16 flex flex-col justify-center'>
+      <div className='w-full lg:w-1/2 bg-gradient-to-br from-orange via-yellow to-orange p-8 lg:p-12 xl:p-16 flex flex-col justify-center pt-24 lg:pt-32'>
         <div className='max-w-md mx-auto w-full'>
           <h1 className={`text-3xl md:text-4xl lg:text-5xl text-white font-bold mb-4 text-with-shadow ${titleFont.className}`}>
            ERA(Export Readiness Assessment) Interest Form
           </h1>
           <p className={`text-lg md:text-xl text-black/95 mb-2 ${josefinRegular.className}`}>
-We’re launching an Export Readiness Assessment to help African food and beverage producers prepare for global buyers.
+We're launching an Export Readiness Assessment to help African food and beverage producers prepare for global buyers.
 
  
           </p>
@@ -65,8 +65,8 @@ We’re launching an Export Readiness Assessment to help African food and bevera
            Join the waiting list to get early access and priority onboarding.
           </p>
 
-          <p className={`text-lg md:text-xl text-black/95 mb-2 ${josefinRegular.className}`}>Register Your Interest Form </p>
-<p>Tell us a bit about your business and we’ll notify you when onboarding opens</p>
+          <h2 className={`text-xl md:text-2xl text-black/95 mb-3 font-semibold ${josefinSemiBold.className}`}>Register Your Interest Form</h2>
+          <p className={`text-base text-black/90 mb-10 ${josefinRegular.className}`}>Tell us a bit about your business and we'll notify you when onboarding opens</p>
 
           <form ref={formRef} action={action} className='space-y-10'>
             <div>
@@ -160,6 +160,16 @@ We’re launching an Export Readiness Assessment to help African food and bevera
                   />
                   <Label htmlFor='exploring' className='text-black cursor-pointer'>
                     Exploring
+                  </Label>
+                </div>
+                <div className='flex items-center space-x-2 cursor-pointer'>
+                  <RadioGroupItem
+                    value='No'
+                    id='no'
+                    className='border-white data-[state=checked]:bg-white'
+                  />
+                  <Label htmlFor='no' className='text-black cursor-pointer'>
+                    No
                   </Label>
                 </div>
               </RadioGroup>
@@ -324,4 +334,3 @@ export default async function WaitlistPage() {
     </div>
   );
 }
-

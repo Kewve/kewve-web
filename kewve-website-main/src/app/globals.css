@@ -16,6 +16,15 @@ body {
   overflow-x: hidden !important;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .text-with-shadow {
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
 }

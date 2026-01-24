@@ -7,17 +7,18 @@ export const connectDB = async (): Promise<void> => {
     throw new Error("❌ MONGODB_URI is missing from backend/.env");
   }
 
-  try {
-    if (mongoose.connection.readyState === 1) {
-      console.log("MongoDB already connected");
-      return;
-    }
+  if (mongoose.connection.readyState === 1) {
+    console.log("ℹ️ MongoDB already connected");
+    return;
+  }
 
+  try {
     await mongoose.connect(MONGODB_URI);
     console.log("✅ MongoDB connected successfully");
   } catch (err) {
     console.error("❌ MongoDB connection failed");
-    console.error(err instanceof Error ? err.message : err);
-    process.exit(1);
+    throw new Error(
+      err instanceof Error ? err.message : "Unknown MongoDB error"
+    );
   }
 };

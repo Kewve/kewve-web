@@ -1,5 +1,6 @@
 import { Toaster } from '@/components/ui/toaster';
 import GoogleAnalytics from '@/components/GoogleAnaltyics';
+import Providers from '@/components/providers/AuthProvider';
 import type { Metadata } from 'next';
 
 import './globals.css';
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body>
-        {children}
-        <Toaster />
-        <GoogleAnalytics />
+        <Providers>
+          {children}
+          <Toaster />
+          <GoogleAnalytics />
+        </Providers>
       </body>
     </html>
   );
