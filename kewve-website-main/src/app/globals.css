@@ -16,6 +16,24 @@ body {
   overflow-x: hidden !important;
 }
 
+/* Cross-browser header/logo normalization */
+header {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+header img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+header a,
+header button {
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
