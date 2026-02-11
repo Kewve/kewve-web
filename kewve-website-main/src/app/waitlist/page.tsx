@@ -13,6 +13,7 @@ import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { PrismicNextImage } from '@prismicio/next';
 import { createClient } from '@/prismicio';
+import { Loader2 } from 'lucide-react';
 
 const productCategories = [
   'Prepared Foods',
@@ -24,13 +25,32 @@ const productCategories = [
   'Other',
 ];
 
+function SubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type='submit'
+      disabled={pending}
+      className={`w-full bg-black text-white border-2 border-black rounded-full py-3 px-6 text-base lg:text-lg font-semibold transition-all text-center hover:bg-muted-orange hover:border-muted-orange disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${josefinSemiBold.className}`}>
+      {pending ? (
+        <>
+          <Loader2 className='w-5 h-5 animate-spin' />
+          Submitting...
+        </>
+      ) : (
+        'Join Waitlist'
+      )}
+    </button>
+  );
+}
+
 interface WaitlistFormProps {
   showcaseImage?: any;
 }
 
 function WaitlistForm({ showcaseImage }: WaitlistFormProps) {
   const { toast } = useToast();
-  const { pending } = useFormStatus();
   const [state, action] = useFormState(submitWaitlistForm, { message: '', error: false, submitted: false });
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -187,12 +207,7 @@ We're launching an Export Readiness Assessment to help African food and beverage
               .
             </p>
 
-            <button
-              type='submit'
-              disabled={pending}
-              className={`w-full bg-black text-white border-2 border-black rounded-full py-3 px-6 text-base lg:text-lg font-semibold transition-all text-center hover:bg-muted-orange hover:border-muted-orange disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
-              {pending ? 'Submitting...' : 'Join Waitlist'}
-            </button>
+            <SubmitButton />
           </form>
         </div>
       </div>
