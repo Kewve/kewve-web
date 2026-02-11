@@ -20,7 +20,7 @@ export const submitWaitlistForm = async (
       exportInterest: data.get('exportInterest')?.toString() || '',
     };
 
-    const response = await fetch(`${BACKEND_URL}/waitlist`, {
+    const response = await fetch(`${BACKEND_URL}/api/waitlist`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,7 +28,16 @@ export const submitWaitlistForm = async (
       body: JSON.stringify(formData),
     });
 
-    const result = await response.json();
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      return {
+        message: 'Sorry, we could not process your request at the moment. Please try again.',
+        error: true,
+        submitted: true,
+      };
+    }
 
     if (!response.ok) {
       return {
