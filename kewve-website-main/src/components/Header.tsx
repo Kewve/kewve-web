@@ -39,21 +39,12 @@ function Header({ needsBackground = false }: HeaderProps) {
           <Link prefetch href='/' className={headerLinkClassName}>
             Home
           </Link>
-          <Link prefetch href={isAuthenticated ? '/export-readiness/dashboard' : '/export-readiness'} className={headerLinkClassName}>
-            {isAuthenticated ? 'Dashboard' : 'Export Readiness'}
-          </Link>
-          <Link prefetch href='/pricing' className={headerLinkClassName}>
-            Pricing
+          <Link prefetch href='/our-story' className={headerLinkClassName}>
+            Our Story
           </Link>
           <Link prefetch href='/' className='relative flex items-center justify-center shrink-0 mx-4 xl:mx-8'>
             <Image src='/logo-color.png' width={200} height={32} alt='Kewve logo' className='relative z-50 h-8 w-auto' />
             <div className='absolute left-1/2 -translate-x-1/2 -top-[110px] rounded-full bg-white h-48 w-52 z-0'></div>
-          </Link>
-          <Link prefetch href='/our-story' className={headerLinkClassName}>
-            Our Story
-          </Link>
-          <Link prefetch href='/products' className={headerLinkClassName}>
-            Products
           </Link>
           <Link prefetch href='/blog' className={headerLinkClassName}>
             Blog
@@ -65,7 +56,7 @@ function Header({ needsBackground = false }: HeaderProps) {
                   Logout
                 </button>
               ) : (
-                <Link prefetch href='/login' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
+                <Link prefetch href='/coming-soon' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
                   Sign In
                 </Link>
               )}
@@ -86,17 +77,8 @@ function Header({ needsBackground = false }: HeaderProps) {
             <button onClick={handleRouteChange('/')} className={headerMobileClassName}>
               Home
             </button>
-            <button onClick={handleRouteChange(isAuthenticated ? '/export-readiness/dashboard' : '/export-readiness')} className={headerMobileClassName}>
-              {isAuthenticated ? 'Dashboard' : 'Export Readiness'}
-            </button>
-            <button onClick={handleRouteChange('/pricing')} className={headerMobileClassName}>
-              Pricing
-            </button>
             <button onClick={handleRouteChange('/our-story')} className={headerMobileClassName}>
               Our Story
-            </button>
-            <button onClick={handleRouteChange('/products')} className={headerMobileClassName}>
-              Products
             </button>
             <button onClick={handleRouteChange('/blog')} className={headerMobileClassName}>
               Blog
@@ -108,7 +90,7 @@ function Header({ needsBackground = false }: HeaderProps) {
                     Logout
                   </button>
                 ) : (
-                  <button onClick={handleRouteChange('/login')} className={headerMobileClassName}>
+                  <button onClick={handleRouteChange('/coming-soon')} className={headerMobileClassName}>
                     Sign In
                   </button>
                 )}
