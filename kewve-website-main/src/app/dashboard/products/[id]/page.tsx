@@ -132,7 +132,7 @@ export default function ProductFormPage() {
   };
 
   const handleNext = () => {
-    setCompletedTabs((prev) => new Set([...prev, activeTab]));
+    setCompletedTabs((prev) => { const next = new Set(Array.from(prev)); next.add(activeTab); return next; });
     if (activeTab < tabs.length - 1) {
       setActiveTab(activeTab + 1);
     }
@@ -151,7 +151,7 @@ export default function ProductFormPage() {
   };
 
   const handleSave = async () => {
-    setCompletedTabs((prev) => new Set([...prev, activeTab]));
+    setCompletedTabs((prev) => { const next = new Set(Array.from(prev)); next.add(activeTab); return next; });
     setSaving(true);
     try {
       let savedProductId = productId;
