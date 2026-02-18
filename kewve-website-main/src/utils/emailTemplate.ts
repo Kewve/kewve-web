@@ -5,7 +5,7 @@ interface WaitlistConfirmationEmailProps {
 
 export const getWaitlistConfirmationEmailHTML = (data: WaitlistConfirmationEmailProps): string => {
   // Use CID reference for embedded image, fallback to URL if not embedded
-  const footerImageSrc = data.useCID ? 'cid:footer-image' : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://kewve.com'}/images/email-footer.png`;
+  const footerImageSrc = data.useCID ? 'cid:footer-image' : `${process.env.FRONTEND_URL || 'https://kewve.com'}/images/email-footer.png`;
 
   return `
 <!DOCTYPE html>

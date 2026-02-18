@@ -61,6 +61,21 @@ export const authenticate = async (
   }
 };
 
+export const requireAdmin = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  if (!req.user || req.user.role !== 'admin') {
+    res.status(403).json({
+      success: false,
+      message: "Admin access required.",
+    });
+    return;
+  }
+  next();
+};
+
 export const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, getJwtSecret(), { expiresIn: "30d" });
 };

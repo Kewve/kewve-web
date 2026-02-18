@@ -5,8 +5,11 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   name: string;
+  role: 'producer' | 'admin';
   businessName?: string;
   country?: string;
+  resetToken?: string;
+  resetTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -33,6 +36,11 @@ const UserSchema = new Schema<UserDocument>(
       required: [true, "Name is required"],
       trim: true,
     },
+    role: {
+      type: String,
+      enum: ["producer", "admin"],
+      default: "producer",
+    },
     businessName: {
       type: String,
       trim: true,
@@ -40,6 +48,14 @@ const UserSchema = new Schema<UserDocument>(
     country: {
       type: String,
       trim: true,
+    },
+    resetToken: {
+      type: String,
+      select: false,
+    },
+    resetTokenExpiry: {
+      type: Date,
+      select: false,
     },
   },
   {

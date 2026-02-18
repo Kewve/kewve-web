@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/use-toast';
 import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
 import Header from '@/components/Header';
@@ -10,6 +8,7 @@ import Footer from '@/components/Footer';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { createCheckoutSession } from '@/actions/createCheckout';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -21,9 +20,35 @@ export default function RegisterPage() {
     country: '',
   });
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [emailError, setEmailError] = useState('');
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
+
+  const checkEmailExists = async (email: string) => {
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      setEmailError('');
+      return;
+    }
+    setCheckingEmail(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiUrl}/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.exists) {
+        setEmailError('An account with this email already exists.');
+      } else {
+        setEmailError('');
+      }
+    } catch {
+      setEmailError('');
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,27 +71,49 @@ export default function RegisterPage() {
       return;
     }
 
+    if (emailError) {
+      toast({
+        title: 'Error',
+        description: emailError,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await register({
+      toast({
+        title: 'Redirecting to payment...',
+        description: 'Your account will be created after payment is confirmed.',
+      });
+
+      const result = await createCheckoutSession({
+        name: formData.name,
         email: formData.email,
         password: formData.password,
-        name: formData.name,
         businessName: formData.businessName || undefined,
         country: formData.country || undefined,
       });
-      toast({
-        title: 'Success!',
-        description: 'Your account has been created successfully.',
-      });
+
+      if (result.error) {
+        toast({
+          title: 'Payment Error',
+          description: result.error,
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+      if (result.url) {
+        window.location.href = result.url;
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create account. Please try again.',
+        description: error.message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -108,11 +155,28 @@ export default function RegisterPage() {
                   type='email'
                   id='email'
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (emailError) setEmailError('');
+                  }}
+                  onBlur={(e) => checkEmailExists(e.target.value)}
                   required
-                  className='bg-white border-gray-300'
+                  className={`bg-white ${emailError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                   placeholder='your@email.com'
                 />
+                {checkingEmail && (
+                  <p className={`text-xs text-gray-500 mt-1 ${josefinRegular.className}`}>
+                    Checking email...
+                  </p>
+                )}
+                {emailError && !checkingEmail && (
+                  <p className={`text-xs text-red-600 mt-1 ${josefinRegular.className}`}>
+                    {emailError}{' '}
+                    <Link href='/login' className='underline font-semibold'>
+                      Log in here
+                    </Link>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -175,9 +239,9 @@ export default function RegisterPage() {
 
               <button
                 type='submit'
-                disabled={loading}
+                disabled={loading || !!emailError || checkingEmail}
                 className={`w-full bg-black text-white border-2 border-black rounded-full py-3 px-6 text-base font-semibold transition-all text-center hover:bg-muted-orange hover:border-muted-orange disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
-                {loading ? 'Creating account...' : 'Create Account'}
+                {loading ? 'Redirecting to payment...' : 'Proceed to Payment'}
               </button>
             </form>
 

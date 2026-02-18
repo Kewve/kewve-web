@@ -61,9 +61,12 @@ export const getAssessment = async (req: AuthRequest, res: Response): Promise<vo
         name: doc.name,
         type: doc.type,
         size: doc.size || 0,
-        url: doc.url, // Include url for old documents
+        status: doc.status || 'pending',
+        category: doc.category,
+        url: doc.url,
+        rejectionReason: doc.rejectionReason,
+        reviewedAt: doc.reviewedAt,
         uploadedAt: doc.uploadedAt,
-        // Exclude data field - it's large and should be fetched separately
       }));
     }
 

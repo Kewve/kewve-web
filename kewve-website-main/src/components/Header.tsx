@@ -52,11 +52,16 @@ function Header({ needsBackground = false }: HeaderProps) {
           {!loading && (
             <>
               {isAuthenticated ? (
-                <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer hover:text-orange transition-colors relative z-10`}>
-                  Logout
-                </button>
+                <>
+                  <Link prefetch href='/dashboard' className={`${headerLinkClassName} hover:text-orange transition-colors relative z-10`}>
+                    Dashboard
+                  </Link>
+                  <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer border border-white/50 px-4 py-2 rounded hover:bg-white/10 transition-colors relative z-10`}>
+                    Logout
+                  </button>
+                </>
               ) : (
-                <Link prefetch href='/coming-soon' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
+                <Link prefetch href='/login' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
                   Sign In
                 </Link>
               )}
@@ -86,11 +91,16 @@ function Header({ needsBackground = false }: HeaderProps) {
             {!loading && (
               <>
                 {isAuthenticated ? (
-                  <button onClick={handleLogout} className={headerMobileClassName}>
-                    Logout
-                  </button>
+                  <>
+                    <button onClick={handleRouteChange('/dashboard')} className={headerMobileClassName}>
+                      Dashboard
+                    </button>
+                    <button onClick={handleLogout} className={headerMobileClassName}>
+                      Logout
+                    </button>
+                  </>
                 ) : (
-                  <button onClick={handleRouteChange('/coming-soon')} className={headerMobileClassName}>
+                  <button onClick={handleRouteChange('/login')} className={headerMobileClassName}>
                     Sign In
                   </button>
                 )}

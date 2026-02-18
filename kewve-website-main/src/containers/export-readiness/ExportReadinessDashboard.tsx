@@ -11,7 +11,6 @@ import {
   Package,
   Factory,
   DollarSign,
-  Truck,
   ArrowRight,
   X,
   File,
@@ -24,29 +23,7 @@ import { assessmentAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 
 interface AssessmentData {
-  country?: string;
-  businessRegistered?: string;
-  exportLicense?: string;
-  yearsInBusiness?: string;
-  haccpCertification?: string;
-  accreditedLabTesting?: string;
-  certificateOfAnalysis?: string;
-  localFoodAgencyRegistration?: string;
-  isoCertification?: string;
-  allergenDeclarations?: string;
-  nutritionPanel?: string;
-  labelsInEnglish?: string;
-  barcodes?: string;
-  shelfLifeInfo?: string;
-  monthlyProductionCapacity?: string;
-  consistentSupply?: string;
-  qualityControlProcesses?: string;
-  exportPricing?: string;
-  paymentTerms?: string;
-  samplePolicy?: string;
-  exportGradeCartons?: string;
-  palletiseShipments?: string;
-  deliverToUK?: string;
+  [key: string]: any;
 }
 
 interface CategoryScore {
@@ -84,7 +61,7 @@ export default function ExportReadinessDashboard() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login?redirect=/export-readiness/dashboard');
+      router.push('/login?redirect=/dashboard/export-readiness');
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -143,92 +120,90 @@ export default function ExportReadinessDashboard() {
     );
   }
 
-  // Calculate scores based on answers
+  // Calculate scores based on new rubric (total 100)
   const calculateScores = (data: AssessmentData): CategoryScore[] => {
-    let businessLegitimacy = 0;
+    const yes = (field: string) => data[field] === 'yes';
+
+    // Core Eligibility & Fundamentals (30 pts)
+    let core = 0;
+    // Export Context (10)
+    if (data.country) core += 3;
+    if (data.exportDestination) core += 3;
+    if (yes('plantBasedConfirmation')) core += 4;
+    // Business & Legal (10)
+    if (yes('businessRegistered')) core += 3;
+    if (yes('businessDocuments')) core += 2;
+    if (yes('taxId')) core += 2;
+    if (yes('fixedLocation')) core += 3;
+    // Product Definition (5)
+    if (yes('definedProducts')) core += 2;
+    if (yes('consistentIngredients')) core += 1;
+    if (yes('documentedIngredientList')) core += 1;
+    if (yes('ingredientOriginKnown')) core += 1;
+    // Basic Food Safety Awareness (5)
+    if (yes('haccpProcess')) core += 3;
+    if (yes('documentedProcedures')) core += 2;
+
+    // Food Safety & Quality (25 pts)
     let foodSafety = 0;
-    let packaging = 0;
-    let production = 0;
-    let pricing = 0;
-    let logistics = 0;
+    const certs: string[] = data.certifications || [];
+    if (certs.includes('HACCP')) foodSafety += 5;
+    if (certs.includes('GMP')) foodSafety += 2;
+    if (certs.includes('ISO 22000') || certs.includes('FSSC 22000')) foodSafety += 3;
+    if (certs.includes('Organic')) foodSafety += 2;
+    if (yes('hygieneRecords')) foodSafety += 3;
+    if (yes('certificateOfAnalysis')) foodSafety += 4;
+    if (yes('accreditedLabTesting')) foodSafety += 3;
+    if (yes('localFoodAgencyRegistration')) foodSafety += 3;
 
-    // Business Legitimacy (max 15)
-    if (data.businessRegistered === 'yes') businessLegitimacy += 5;
-    if (data.exportLicense === 'yes') businessLegitimacy += 5;
-    if (data.yearsInBusiness === '5-plus') businessLegitimacy += 5;
-    else if (data.yearsInBusiness === '3-5') businessLegitimacy += 3;
-    else if (data.yearsInBusiness === '1-2') businessLegitimacy += 1;
+    // Packaging, Labelling & Shelf Life (20 pts)
+    let packLabel = 0;
+    // Packaging (5)
+    if (yes('exportPackaging')) packLabel += 2;
+    if (yes('internationalShipping')) packLabel += 2;
+    if (yes('multipleFormats')) packLabel += 1;
+    // Labelling (10)
+    const labelFields = ['labelProductName','labelIngredients','labelAllergens','labelNetWeight','labelOrigin','labelStorage','labelBusinessDetails'];
+    const labelYes = labelFields.filter((f) => yes(f)).length;
+    packLabel += Math.min(Math.round((labelYes / 7) * 5), 5);
+    if (yes('labelsInEnglish')) packLabel += 2;
+    if (yes('allergenDeclarations')) packLabel += 1;
+    if (yes('barcodes')) packLabel += 1;
+    if (yes('shelfLifeInfo')) packLabel += 1;
+    // Shelf Life (5)
+    if (yes('knownShelfLife')) packLabel += 2;
+    if (yes('shelfLifeTested')) packLabel += 2;
+    if (yes('storageConditionsDefined')) packLabel += 1;
 
-    // Food Safety & Compliance (max 25)
-    if (data.haccpCertification === 'yes') foodSafety += 8;
-    if (data.accreditedLabTesting === 'yes') foodSafety += 5;
-    if (data.certificateOfAnalysis === 'yes') foodSafety += 5;
-    if (data.localFoodAgencyRegistration === 'yes') foodSafety += 4;
-    if (data.isoCertification === 'yes') foodSafety += 3;
+    // Capacity, Logistics & Trade Readiness (15 pts)
+    let capLog = 0;
+    // Capacity (7)
+    if (data.monthlyProductionCapacity === '5000-plus') capLog += 3;
+    else if (data.monthlyProductionCapacity === '1000-5000') capLog += 2;
+    else if (data.monthlyProductionCapacity === '500-1000') capLog += 1;
+    if (yes('consistentSupply')) capLog += 2;
+    if (yes('scalableProduction')) capLog += 1;
+    if (yes('qualityControlProcesses')) capLog += 1;
+    // Logistics (8)
+    if (yes('exportedBefore')) capLog += 3;
+    if (yes('exportGradeCartons')) capLog += 3;
+    if (yes('understandLogistics')) capLog += 2;
 
-    // Packaging & Labelling (max 20)
-    if (data.allergenDeclarations === 'yes') packaging += 5;
-    if (data.nutritionPanel === 'yes') packaging += 6;
-    if (data.labelsInEnglish === 'yes') packaging += 4;
-    if (data.barcodes === 'yes') packaging += 3;
-    if (data.shelfLifeInfo === 'yes') packaging += 2;
-
-    // Production & Capacity (max 15)
-    if (data.monthlyProductionCapacity === '50000-plus') production += 6;
-    else if (data.monthlyProductionCapacity === '10000-50000') production += 5;
-    else if (data.monthlyProductionCapacity === '5000-10000') production += 4;
-    else if (data.monthlyProductionCapacity === '1000-5000') production += 3;
-    else if (data.monthlyProductionCapacity === 'less-than-1000') production += 1;
-    if (data.consistentSupply === 'yes') production += 5;
-    if (data.qualityControlProcesses === 'yes') production += 4;
-
-    // Pricing & Commercial (max 15)
-    if (data.exportPricing === 'yes') pricing += 6;
-    if (data.paymentTerms === 'yes') pricing += 5;
-    if (data.samplePolicy === 'yes') pricing += 4;
-
-    // Logistics Readiness (max 10)
-    if (data.exportGradeCartons === 'yes') logistics += 3;
-    if (data.palletiseShipments === 'yes') logistics += 4;
-    if (data.deliverToUK === 'yes') logistics += 3;
+    // Financial Readiness & Documentation (10 pts)
+    let financial = 0;
+    if (yes('businessBankAccount')) financial += 2;
+    if (yes('internationalPayments')) financial += 2;
+    if (yes('exportPricing')) financial += 2;
+    if (yes('paymentTerms')) financial += 2;
+    if (yes('samplePolicy')) financial += 1;
+    if (yes('canUploadCOA')) financial += 1;
 
     return [
-      {
-        name: 'Business Legitimacy',
-        score: businessLegitimacy,
-        maxScore: 15,
-        icon: <Briefcase className='w-5 h-5' />,
-      },
-      {
-        name: 'Food Safety & Compliance',
-        score: foodSafety,
-        maxScore: 25,
-        icon: <ChefHat className='w-5 h-5' />,
-      },
-      {
-        name: 'Packaging & Labelling',
-        score: packaging,
-        maxScore: 20,
-        icon: <Package className='w-5 h-5' />,
-      },
-      {
-        name: 'Production & Capacity',
-        score: production,
-        maxScore: 15,
-        icon: <Factory className='w-5 h-5' />,
-      },
-      {
-        name: 'Pricing & Commercial',
-        score: pricing,
-        maxScore: 15,
-        icon: <DollarSign className='w-5 h-5' />,
-      },
-      {
-        name: 'Logistics Readiness',
-        score: logistics,
-        maxScore: 10,
-        icon: <Truck className='w-5 h-5' />,
-      },
+      { name: 'Core Eligibility & Fundamentals', score: core, maxScore: 30, icon: <Briefcase className='w-5 h-5' /> },
+      { name: 'Food Safety & Quality', score: foodSafety, maxScore: 25, icon: <ChefHat className='w-5 h-5' /> },
+      { name: 'Packaging, Labelling & Shelf Life', score: packLabel, maxScore: 20, icon: <Package className='w-5 h-5' /> },
+      { name: 'Capacity, Logistics & Trade', score: capLog, maxScore: 15, icon: <Factory className='w-5 h-5' /> },
+      { name: 'Financial & Documentation', score: financial, maxScore: 10, icon: <DollarSign className='w-5 h-5' /> },
     ];
   };
 
@@ -237,26 +212,54 @@ export default function ExportReadinessDashboard() {
   const maxTotalScore = categoryScores.reduce((sum, cat) => sum + cat.maxScore, 0);
   const percentageScore = Math.round((totalScore / maxTotalScore) * 100);
 
-  // Determine status
+  // Determine status (new bands: 0-39 Not Ready, 40-69 Nearly Ready, 70-100 Export Ready)
   const getStatus = () => {
-    if (percentageScore >= 70) {
+    if (totalScore >= 70) {
       return { 
-        label: 'Ready', 
+        label: 'Export Ready', 
         color: 'bg-green-600', 
         textColor: 'text-green-700', 
         bgColor: 'bg-green-100', 
         borderColor: 'border-green-300', 
-        text: 'Ready for international trade' 
+        text: 'Ready for international trade',
+        headline: 'You are export-ready for UK and/or EU trade.',
+        subtitle: 'Your assessment shows that your business, products, and documentation meet the key requirements for UK and/or EU export. You are ready to move into structured trade preparation.',
+        bullets: [
+          'Your products meet export readiness standards.',
+          'You may be eligible for supply aggregation.',
+          'Your products can be considered for buyer sourcing requests.',
+        ],
+        nextLabel: 'Next steps on Kewve:',
+        nextSteps: [
+          'Ensure all product information and documents are up to date.',
+          'Prepare for aggregation opportunities.',
+          'Respond to buyer interest when notified.',
+        ],
       };
     }
-    if (percentageScore >= 40) {
+    if (totalScore >= 40) {
       return { 
-        label: 'Developing', 
+        label: 'Nearly Ready', 
         color: 'bg-amber-500', 
         textColor: 'text-amber-700', 
         bgColor: 'bg-amber-100', 
         borderColor: 'border-amber-300', 
-        text: 'Significant work required' 
+        text: 'Some areas need attention',
+        headline: "You're close to being export-ready.",
+        subtitle: 'Your assessment shows that you meet many of the core requirements for UK or EU export, but a small number of important gaps still need to be addressed before trade can begin.',
+        bullets: [
+          'Your business and products show strong export potential.',
+          'Some compliance, documentation, or readiness items are still outstanding.',
+          'Once these gaps are resolved, you may qualify for aggregation and buyer interest.',
+        ],
+        nextLabel: 'What you can do now on Kewve:',
+        nextSteps: [
+          'Complete your trade profile.',
+          'Build and organise your product catalog.',
+          'Upload available certifications and documents.',
+          'Review your market-specific checklist for the UK, EU, or both.',
+          'Track outstanding readiness items directly in your dashboard.',
+        ],
       };
     }
     return { 
@@ -265,21 +268,35 @@ export default function ExportReadinessDashboard() {
       textColor: 'text-red-700', 
       bgColor: 'bg-red-100', 
       borderColor: 'border-red-300', 
-      text: 'Major gaps to address' 
+      text: 'Major gaps to address',
+      headline: "You're at the foundation stage of export readiness.",
+      subtitle: 'Your assessment shows that some essential foundations for UK or EU export are not yet in place. This is a common starting point for many producers and does not reflect the quality or potential of your products.',
+      bullets: [
+        'Your business or product setup needs further preparation before export can begin.',
+        'You are not yet ready to trade with UK or EU buyers.',
+        'Your focus should be on building the core foundations required for export.',
+      ],
+      nextLabel: 'Next steps on Kewve:',
+      nextSteps: [
+        'Review your readiness snapshot and key gaps.',
+        'Work through the foundational checklist provided.',
+        'Save your progress and return when improvements are complete.',
+        'You can retake the assessment at any time.',
+      ],
     };
   };
 
   const status = getStatus();
-  const isEligible = percentageScore >= 70 && assessmentData.haccpCertification === 'yes' && assessmentData.nutritionPanel === 'yes' && assessmentData.deliverToUK === 'yes';
+  const isEligible = totalScore >= 70 && assessmentData.haccpProcess === 'yes' && assessmentData.labelsInEnglish === 'yes';
 
   // Generate action items based on gaps
   const getActionItems = (): ActionItem[] => {
     if (!assessmentData) return [];
     const items: ActionItem[] = [];
 
-    if (assessmentData.haccpCertification !== 'yes') {
+    if (assessmentData.haccpProcess !== 'yes') {
       items.push({
-        title: 'Begin HACCP certification pathway',
+        title: 'Implement HACCP-based food safety process',
         category: 'Food Safety',
         priority: 'High',
         steps: [
@@ -293,7 +310,7 @@ export default function ExportReadinessDashboard() {
 
     if (assessmentData.accreditedLabTesting !== 'yes' || assessmentData.certificateOfAnalysis !== 'yes') {
       items.push({
-        title: 'Complete accredited lab testing and upload Certificate of Analysis (COA)',
+        title: 'Complete accredited lab testing and obtain COA',
         category: 'Food Safety',
         priority: 'High',
         steps: [
@@ -305,58 +322,56 @@ export default function ExportReadinessDashboard() {
       });
     }
 
-    if (assessmentData.localFoodAgencyRegistration !== 'yes') {
+    if (assessmentData.businessRegistered !== 'yes' || assessmentData.businessDocuments !== 'yes') {
       items.push({
-        title: 'Obtain local food registration for export products',
-        category: 'Food Safety',
+        title: 'Complete business registration and documentation',
+        category: 'Business & Legal',
+        priority: 'High',
+        steps: [
+          'Register business with relevant authority',
+          'Obtain official registration documents',
+          'Obtain tax identification number',
+        ],
+      });
+    }
+
+    if (assessmentData.labelsInEnglish !== 'yes' || assessmentData.allergenDeclarations !== 'yes') {
+      items.push({
+        title: 'Update product labels to UK/EU compliance',
+        category: 'Labelling',
+        priority: 'High',
+        steps: [
+          'Ensure all labels are in English',
+          'Add allergen declarations',
+          'Include all required label elements',
+          'Add barcodes (EAN/UPC)',
+        ],
+      });
+    }
+
+    if (assessmentData.exportPackaging !== 'yes') {
+      items.push({
+        title: 'Prepare export-grade packaging',
+        category: 'Packaging',
         priority: 'Medium',
         steps: [
-          'Contact local food regulatory authority',
-          'Complete registration application',
-          'Submit required documentation',
-          'Upload registration certificate',
+          'Source export-grade packaging materials',
+          'Ensure packaging is suitable for international shipping',
+          'Consider multiple format options (bulk/retail)',
         ],
       });
     }
 
-    if (assessmentData.nutritionPanel !== 'yes') {
+    if (assessmentData.exportGradeCartons !== 'yes') {
       items.push({
-        title: 'Add UK/EU-compliant nutrition panel to packaging',
-        category: 'Packaging & Labelling',
-        priority: 'High',
-        steps: [
-          'Review UK/EU nutrition labelling requirements',
-          'Design compliant nutrition panel',
-          'Update packaging artwork',
-          'Upload updated packaging sample',
-        ],
-      });
-    }
-
-    if (assessmentData.exportLicense !== 'yes') {
-      items.push({
-        title: 'Obtain export license from relevant authority',
-        category: 'Business Legitimacy',
-        priority: 'High',
-        steps: [
-          'Identify relevant export licensing authority',
-          'Complete export license application',
-          'Submit required business documentation',
-          'Upload export license certificate',
-        ],
-      });
-    }
-
-    if (assessmentData.exportGradeCartons !== 'yes' || assessmentData.palletiseShipments !== 'yes') {
-      items.push({
-        title: 'Source export cartons and develop palletization plan',
+        title: 'Source export cartons and develop logistics plan',
         category: 'Logistics',
         priority: 'Medium',
         steps: [
-          'Identify export-grade packaging suppliers',
-          'Design palletization layout',
-          'Test pallet stability',
-          'Document palletization procedures',
+          'Identify export-grade carton suppliers',
+          'Develop palletisation plan',
+          'Understand FOB/CIF terms',
+          'Establish realistic lead times',
         ],
       });
     }
@@ -502,56 +517,110 @@ export default function ExportReadinessDashboard() {
           </p>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8'>
-          {/* Left Column - Score and Checklist */}
-          <div className='lg:col-span-2 space-y-6'>
-            {/* Your Score Section */}
-            <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
-              <div className='flex items-start justify-between mb-6'>
-                <div className='flex-1'>
-                  <h2 className={`text-2xl font-bold text-black mb-2 ${josefinSemiBold.className}`}>Your Score</h2>
-                  <p className={`text-sm text-black-muted mb-4 ${josefinRegular.className}`}>Overall export readiness rating</p>
-                  <div className='flex items-center gap-3 flex-wrap'>
-                    <div className={`inline-block ${status.color} text-white px-4 py-2 rounded-lg ${josefinSemiBold.className}`}>
-                      {status.label}
-                    </div>
-                    <span className={`text-sm ${status.textColor} ${josefinRegular.className}`}>{status.text}</span>
-                  </div>
-                </div>
-                <div className='text-right'>
-                  <span className={`text-6xl font-bold ${status.textColor} ${titleFont.className}`}>{totalScore}</span>
-                  <p className={`text-sm text-black-muted mt-1 ${josefinRegular.className}`}>out of {maxTotalScore}</p>
-                </div>
+        {/* Result Screen */}
+        <div className={`rounded-lg p-6 lg:p-8 shadow-sm border mb-8 ${status.bgColor} ${status.borderColor}`}>
+          <div className='flex flex-col md:flex-row items-start justify-between gap-6'>
+            <div className='flex-1'>
+              <div className='flex items-center gap-3 mb-3'>
+                <span className={`inline-block ${status.color} text-white px-4 py-2 rounded-lg text-sm ${josefinSemiBold.className}`}>{status.label}</span>
+                <span className={`text-sm ${status.textColor} ${josefinRegular.className}`}>Score: {totalScore}/100</span>
               </div>
+              <h2 className={`text-2xl md:text-3xl font-bold text-black mb-3 ${titleFont.className}`}>{status.headline}</h2>
+              <p className={`text-sm text-black-muted mb-4 leading-relaxed ${josefinRegular.className}`}>{status.subtitle}</p>
+              <ul className='space-y-2 mb-6'>
+                {status.bullets.map((b, i) => (
+                  <li key={i} className='flex items-start gap-2'>
+                    <span className='mt-1.5 w-1.5 h-1.5 rounded-full bg-black-muted flex-shrink-0'></span>
+                    <span className={`text-sm text-black-muted ${josefinRegular.className}`}>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <h3 className={`text-base font-bold text-black mb-2 ${josefinSemiBold.className}`}>{status.nextLabel}</h3>
+              <ul className='space-y-2'>
+                {status.nextSteps.map((s, i) => (
+                  <li key={i} className='flex items-start gap-2'>
+                    <span className='mt-1.5 w-1.5 h-1.5 rounded-full bg-orange flex-shrink-0'></span>
+                    <span className={`text-sm text-black ${josefinRegular.className}`}>{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className='text-center md:text-right flex-shrink-0'>
+              <span className={`text-7xl font-bold ${status.textColor} ${titleFont.className}`}>{totalScore}</span>
+              <p className={`text-sm text-black-muted mt-1 ${josefinRegular.className}`}>out of 100</p>
+            </div>
+          </div>
+        </div>
 
-              {/* Score Breakdown */}
-              <div className='mt-8'>
-                <h3 className={`text-lg font-bold text-black mb-4 ${josefinSemiBold.className}`}>SCORE BREAKDOWN</h3>
-                <div className='space-y-4'>
-                  {categoryScores.map((category) => {
-                    const percentage = (category.score / category.maxScore) * 100;
-                    return (
-                      <div key={category.name} className='space-y-2'>
-                        <div className='flex items-center justify-between'>
-                          <div className='flex items-center gap-2'>
-                            {category.icon}
-                            <span className={`text-sm text-black ${josefinRegular.className}`}>{category.name}</span>
-                          </div>
-                          <span className={`text-sm font-semibold text-black ${josefinSemiBold.className}`}>
-                            {category.score}/{category.maxScore}
-                          </span>
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8'>
+          {/* Left Column - Score Breakdown, Market Fit, and Checklist */}
+          <div className='lg:col-span-2 space-y-6'>
+            {/* Score Breakdown */}
+            <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
+              <h2 className={`text-2xl font-bold text-black mb-6 ${josefinSemiBold.className}`}>Score Breakdown</h2>
+              <div className='space-y-4'>
+                {categoryScores.map((category) => {
+                  const percentage = (category.score / category.maxScore) * 100;
+                  return (
+                    <div key={category.name} className='space-y-2'>
+                      <div className='flex items-center justify-between'>
+                        <div className='flex items-center gap-2'>
+                          {category.icon}
+                          <span className={`text-sm text-black ${josefinRegular.className}`}>{category.name}</span>
                         </div>
-                        <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden'>
-                          <div
-                            className={`h-full ${percentage >= 70 ? 'bg-green-600' : percentage >= 40 ? 'bg-amber-500' : 'bg-red-600'} transition-all duration-300`}
-                            style={{ width: `${percentage}%` }}></div>
-                        </div>
+                        <span className={`text-sm font-semibold text-black ${josefinSemiBold.className}`}>
+                          {category.score}/{category.maxScore}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden'>
+                        <div
+                          className={`h-full ${percentage >= 70 ? 'bg-green-600' : percentage >= 40 ? 'bg-amber-500' : 'bg-red-600'} transition-all duration-300`}
+                          style={{ width: `${percentage}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+
+            {/* Market Fit Indicator */}
+            {assessmentData.exportDestination && (
+              <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
+                <h2 className={`text-2xl font-bold text-black mb-4 ${josefinSemiBold.className}`}>Market Fit Indicator</h2>
+                <div className='space-y-3'>
+                  {(assessmentData.exportDestination === 'uk' || assessmentData.exportDestination === 'both') && (
+                    <div className='flex items-start gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3'>
+                      <Check className='w-5 h-5 text-green-600 mt-0.5 flex-shrink-0' />
+                      <div>
+                        <span className={`text-sm font-semibold text-green-800 ${josefinSemiBold.className}`}>UK</span>
+                        <p className={`text-xs text-green-700 mt-0.5 ${josefinRegular.className}`}>Your products currently meet UK-specific requirements.</p>
+                      </div>
+                    </div>
+                  )}
+                  {(assessmentData.exportDestination === 'eu' || assessmentData.exportDestination === 'both') && (
+                    <div className='flex items-start gap-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3'>
+                      <Check className='w-5 h-5 text-green-600 mt-0.5 flex-shrink-0' />
+                      <div>
+                        <span className={`text-sm font-semibold text-green-800 ${josefinSemiBold.className}`}>EU</span>
+                        <p className={`text-xs text-green-700 mt-0.5 ${josefinRegular.className}`}>Your products currently meet EU-specific requirements.</p>
+                      </div>
+                    </div>
+                  )}
+                  {assessmentData.exportDestination === 'both' && (
+                    <div className='flex items-start gap-3 bg-orange/5 border border-orange/20 rounded-lg px-4 py-3'>
+                      <Check className='w-5 h-5 text-orange mt-0.5 flex-shrink-0' />
+                      <div>
+                        <span className={`text-sm font-semibold text-orange ${josefinSemiBold.className}`}>Both</span>
+                        <p className={`text-xs text-black-muted mt-0.5 ${josefinRegular.className}`}>Your products meet requirements for both UK and EU markets.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className={`text-xs text-black-muted mt-4 ${josefinRegular.className}`}>
+                  Market Fit reflects readiness based on labelling, documentation, and logistics information provided.
+                </p>
+              </div>
+            )}
 
             {/* Action Checklist */}
             <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
@@ -632,115 +701,65 @@ export default function ExportReadinessDashboard() {
             </div>
           </div>
 
-          {/* Right Column - Eligibility, Documents, Next Steps */}
+          {/* Right Column - Eligibility, Quick Actions */}
           <div className='space-y-6'>
-            {/* Trade Showcase Eligibility */}
+            {/* Aggregation Eligibility */}
             <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
-              <h2 className={`text-xl font-bold text-black mb-4 ${josefinSemiBold.className}`}>Trade Showcase Eligibility</h2>
+              <h2 className={`text-xl font-bold text-black mb-4 ${josefinSemiBold.className}`}>Aggregation Eligibility</h2>
               {isEligible ? (
                 <div className='bg-green-100 border border-green-300 rounded-lg p-4 mb-4'>
                   <div className='flex items-center gap-2 mb-2'>
                     <Check className='w-5 h-5 text-green-700' />
                     <span className={`font-semibold text-green-700 ${josefinSemiBold.className}`}>Eligible</span>
                   </div>
-                  <p className={`text-sm text-green-700 ${josefinRegular.className}`}>All showcase eligibility criteria met.</p>
+                  <p className={`text-sm text-green-700 ${josefinRegular.className}`}>
+                    Your products can be considered for supply aggregation and buyer sourcing requests.
+                  </p>
                 </div>
               ) : (
                 <div className='bg-yellow-100 border border-yellow-300 rounded-lg p-4 mb-4'>
                   <div className='flex items-center gap-2 mb-2'>
                     <AlertTriangle className='w-5 h-5 text-yellow-700' />
-                    <span className={`font-semibold text-yellow-700 ${josefinSemiBold.className}`}>Not Eligible</span>
+                    <span className={`font-semibold text-yellow-700 ${josefinSemiBold.className}`}>Not Yet Eligible</span>
                   </div>
                   <p className={`text-sm text-yellow-700 ${josefinRegular.className}`}>
-                    {percentageScore < 70
-                      ? 'Score below 70. Minimum score of 70 required for showcase eligibility.'
-                      : 'Missing critical requirements for showcase eligibility.'}
+                    {totalScore < 70
+                      ? 'A minimum score of 70 is required for aggregation eligibility.'
+                      : 'Critical compliance requirements are still outstanding.'}
                   </p>
                 </div>
               )}
               <p className={`text-xs text-black-muted ${josefinRegular.className}`}>
-                International Trade Showcase eligibility (trade fairs, buyer showcases, sourcing events) requires a score of 70+, no critical gaps in food safety or labelling, and delivery capability to UK hub.
+                Aggregation eligibility requires a score of 70+, HACCP-based food safety, and compliant labelling.
               </p>
-            </div>
-
-            {/* Documents */}
-            <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
-              <h2 className={`text-xl font-bold text-black mb-4 ${josefinSemiBold.className}`}>Documents</h2>
-              <input
-                type='file'
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                accept='.pdf,.doc,.docx,.jpg,.jpeg,.png'
-                className='hidden'
-                id='document-upload'
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className={`w-full bg-transparent border-2 border-black text-black rounded-lg py-3 px-4 font-semibold transition-all hover:bg-orange hover:border-orange hover:text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
-                {uploading ? (
-                  <>
-                    <div className='w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin'></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className='w-4 h-4' />
-                    Upload Document
-                  </>
-                )}
-              </button>
-              
-              {documents && documents.length > 0 ? (
-                <div className='mt-4 space-y-2'>
-                  {documents.map((doc: any, index: number) => {
-                    const docId = doc._id?.toString() || doc._id || doc.id || `doc-${index}`;
-                    return (
-                      <div
-                        key={docId}
-                        className='flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200'>
-                        <div className='flex items-center gap-2 flex-1 min-w-0'>
-                          <File className='w-4 h-4 text-gray-600 flex-shrink-0' />
-                        <a
-                          href={doc.url 
-                            ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${doc.url}`
-                            : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/assessment/documents/${doc._id?.toString() || doc._id || doc.id || `doc-${index}`}`
-                          }
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className={`text-sm text-black truncate hover:text-orange transition-colors ${josefinRegular.className}`}>
-                          {doc.name || `Document ${index + 1}`}
-                        </a>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteDocument(docId)}
-                          className='ml-2 p-1 hover:bg-red-100 rounded transition-colors flex-shrink-0'
-                          aria-label='Delete document'>
-                          <X className='w-4 h-4 text-red-600' />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className={`text-xs text-black-muted mt-3 ${josefinRegular.className}`}>No documents uploaded yet.</p>
-              )}
             </div>
 
             {/* Next Steps */}
             <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
               <h2 className={`text-xl font-bold text-black mb-4 ${josefinSemiBold.className}`}>Next Steps</h2>
               <button
-                onClick={() => router.push('/export-readiness/assessment')}
+                onClick={() => router.push('/dashboard/verification')}
                 className={`w-full bg-transparent border-2 border-black text-black rounded-lg py-3 px-4 font-semibold transition-all hover:bg-orange hover:border-orange hover:text-white flex items-center justify-center gap-2 mb-3 ${josefinSemiBold.className}`}>
-                Update Assessment
+                Upload Document
                 <ArrowRight className='w-4 h-4' />
               </button>
               <p className={`text-xs text-black-muted ${josefinRegular.className}`}>
-                {actionItems.length > 0
-                  ? 'Complete the action items above to improve your score and unlock trade showcase eligibility.'
-                  : 'View your current assessment status to improve your score and unlock trade showcase eligibility.'}
+                Upload your documents to complete verification and unlock trade readiness.
               </p>
+            </div>
+
+            {/* Retake Assessment */}
+            <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
+              <h2 className={`text-xl font-bold text-black mb-2 ${josefinSemiBold.className}`}>Retake Assessment</h2>
+              <p className={`text-xs text-black-muted mb-4 ${josefinRegular.className}`}>
+                Made improvements? Retake the assessment at any time to update your score and readiness status.
+              </p>
+              <button
+                onClick={() => router.push('/export-readiness/assessment')}
+                className={`w-full bg-black text-white rounded-lg py-3 px-4 font-semibold text-sm transition-all hover:bg-orange flex items-center justify-center gap-2 ${josefinSemiBold.className}`}>
+                Retake Assessment
+                <ArrowRight className='w-4 h-4' />
+              </button>
             </div>
           </div>
         </div>

@@ -39,13 +39,12 @@ export default function LoginPage() {
         title: 'Success!',
         description: 'You have been logged in successfully.',
       });
-      // Check for redirect
       const redirect = sessionStorage.getItem('redirectAfterLogin');
       if (redirect) {
         sessionStorage.removeItem('redirectAfterLogin');
         router.push(redirect);
       } else {
-        router.push('/export-readiness/dashboard');
+        router.push('/dashboard/export-readiness');
       }
     } catch (error: any) {
       toast({

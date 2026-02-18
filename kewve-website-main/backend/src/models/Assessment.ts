@@ -16,6 +16,10 @@ const DocumentSchema = new Schema(
       type: String,
       required: true,
     },
+    category: {
+      type: String,
+      required: false,
+    },
     // Support both old (url) and new (data) document storage
     url: {
       type: String,
@@ -34,6 +38,19 @@ const DocumentSchema = new Schema(
         // Only require size if url is not present (new documents)
         return !this.url;
       },
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    rejectionReason: {
+      type: String,
+      required: false,
+    },
+    reviewedAt: {
+      type: Date,
+      required: false,
     },
     uploadedAt: {
       type: Date,
@@ -169,6 +186,7 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
   },
   {
     timestamps: true,
+    strict: false,
   }
 );
 

@@ -14,6 +14,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'kewve-cms.cdn.prismic.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
 };
