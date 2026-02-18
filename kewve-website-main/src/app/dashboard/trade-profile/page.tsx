@@ -90,7 +90,8 @@ export default function TradeProfilePage() {
   };
 
   const handleNext = async () => {
-    const newCompleted = new Set([...completedTabs, activeTab]);
+    const newCompleted = new Set(Array.from(completedTabs));
+    newCompleted.add(activeTab);
     setCompletedTabs(newCompleted);
 
     // Auto-save on each step
@@ -115,7 +116,8 @@ export default function TradeProfilePage() {
   };
 
   const handleSaveProfile = async () => {
-    const newCompleted = new Set([...completedTabs, activeTab]);
+    const newCompleted = new Set(Array.from(completedTabs));
+    newCompleted.add(activeTab);
     setCompletedTabs(newCompleted);
     setSaving(true);
     try {
