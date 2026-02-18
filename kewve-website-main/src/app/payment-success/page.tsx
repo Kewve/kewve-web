@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { josefinSemiBold, josefinRegular, titleFont } from '@/utils';
 import { setAuthToken } from '@/lib/api';
@@ -9,7 +9,7 @@ import { completeRegistration } from '@/actions/completeRegistration';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { refreshUser } = useAuth();
@@ -107,5 +107,23 @@ export default function PaymentSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen bg-gradient-to-br from-orange via-yellow to-orange flex items-center justify-center px-4'>
+          <div className='w-full max-w-md'>
+            <div className='bg-white rounded-lg shadow-lg p-8 text-center'>
+              <Loader2 className='w-12 h-12 text-orange mx-auto mb-4 animate-spin' />
+              <p className={`text-sm text-gray-500 ${josefinRegular.className}`}>Loading...</p>
+            </div>
+          </div>
+        </div>
+      }>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }
