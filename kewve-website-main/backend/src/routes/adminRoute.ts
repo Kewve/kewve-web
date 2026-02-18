@@ -343,7 +343,7 @@ router.get("/admin/products", authenticateAdmin, async (req: AuthRequest, res: R
     const products = await Product.find({}).select("-image").sort({ createdAt: -1 }).lean();
 
     // Get producer info for each product
-    const userIds = [...new Set(products.map((p: any) => p.userId.toString()))];
+    const userIds = Array.from(new Set(products.map((p: any) => p.userId.toString())));
     const users = await User.find({ _id: { $in: userIds } }).select("name email businessName").lean();
     const userMap = new Map(users.map((u: any) => [u._id.toString(), u]));
 
