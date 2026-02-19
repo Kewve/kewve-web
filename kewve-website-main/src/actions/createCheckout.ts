@@ -22,15 +22,21 @@ export async function createCheckoutSession(registrationData: RegistrationData) 
     }
 
     // Check if email already exists before charging
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    const checkRes = await fetch(`${apiUrl}/auth/check-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: registrationData.email }),
-    });
-    const checkData = await checkRes.json();
-    if (checkData.success && checkData.data?.exists) {
-      return { error: 'An account with this email already exists. Please log in instead.' };
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL;
+    if (apiUrl) {
+      try {
+        const checkRes = await fetch(`${apiUrl}/auth/check-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: registrationData.email }),
+        });
+        const checkData = await checkRes.json();
+        if (checkData.success && checkData.data?.exists) {
+          return { error: 'An account with this email already exists. Please log in instead.' };
+        }
+      } catch {
+        // Backend unreachable — proceed, the register endpoint has its own duplicate check
+      }
     }
 
     const session = await stripe.checkout.sessions.create({
