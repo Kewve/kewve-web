@@ -39,10 +39,21 @@ import cors from "cors";
 
 const app = express();
 
-// CORS configuration
+// CORS configuration - supports multiple origins via comma-separated FRONTEND_URL
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
+  .split(",")
+  .map((o) => o.trim());
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, server-to-server, curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.some((allowed) => origin === allowed || origin.endsWith(".vercel.app"))) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
