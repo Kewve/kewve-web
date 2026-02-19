@@ -2,12 +2,11 @@
 
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
 export async function completeRegistration(sessionId: string) {
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000/api';
+
     if (!process.env.STRIPE_SECRET_KEY) {
       return { error: 'Payment system is not configured.' };
     }

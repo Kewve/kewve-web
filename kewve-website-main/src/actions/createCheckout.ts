@@ -2,11 +2,6 @@
 
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-
-const BASE_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const ASSESSMENT_PRICE = parseInt(process.env.ASSESSMENT_PRICE_CENTS || '9900', 10);
-
 interface RegistrationData {
   name: string;
   email: string;
@@ -17,6 +12,10 @@ interface RegistrationData {
 
 export async function createCheckoutSession(registrationData: RegistrationData) {
   try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+    const BASE_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const ASSESSMENT_PRICE = parseInt(process.env.ASSESSMENT_PRICE_CENTS || '9900', 10);
+
     if (!process.env.STRIPE_SECRET_KEY) {
       return { error: 'Payment system is not configured. Please contact support.' };
     }
