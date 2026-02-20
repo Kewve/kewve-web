@@ -545,14 +545,28 @@ export default function AssessmentForm() {
         return (
           <div className='space-y-6'>
             {sectionHeader('Compliance Confirmation', 'Final confirmation before submitting your assessment.')}
-            <div>
-              <Label className='text-black mb-3 block'>I confirm the information provided is accurate.</Label>
-              <YesNoButton value={(formData.confirmAccuracy as 'yes' | 'no') || ''} onValueChange={(v) => set('confirmAccuracy', v)} />
-            </div>
-            <div>
-              <Label className='text-black mb-3 block'>I agree to meet UK/EU compliance requirements before trade.</Label>
-              <YesNoButton value={(formData.agreeCompliance as 'yes' | 'no') || ''} onValueChange={(v) => set('agreeCompliance', v)} />
-            </div>
+            <label className='flex items-start gap-3 cursor-pointer'>
+              <input
+                type='checkbox'
+                checked={formData.confirmAccuracy === 'yes'}
+                onChange={(e) => set('confirmAccuracy', e.target.checked ? 'yes' : 'no')}
+                className='mt-1 h-5 w-5 rounded border-gray-300 text-orange focus:ring-orange accent-orange cursor-pointer'
+              />
+              <span className={`text-sm text-black ${josefinRegular.className}`}>
+                I confirm the information provided is accurate.
+              </span>
+            </label>
+            <label className='flex items-start gap-3 cursor-pointer'>
+              <input
+                type='checkbox'
+                checked={formData.agreeCompliance === 'yes'}
+                onChange={(e) => set('agreeCompliance', e.target.checked ? 'yes' : 'no')}
+                className='mt-1 h-5 w-5 rounded border-gray-300 text-orange focus:ring-orange accent-orange cursor-pointer'
+              />
+              <span className={`text-sm text-black ${josefinRegular.className}`}>
+                I agree to meet UK/EU compliance requirements before trade.
+              </span>
+            </label>
           </div>
         );
 
@@ -622,7 +636,8 @@ export default function AssessmentForm() {
             className={`px-6 py-3 rounded-lg border-2 border-gray-300 bg-white text-black-muted font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-2 ${josefinSemiBold.className}`}>
             <ChevronLeft className='w-4 h-4' /> Back
           </button>
-          <button onClick={handleNext} disabled={saving}
+          <button onClick={handleNext}
+            disabled={saving || (currentStep === TOTAL_STEPS && (formData.confirmAccuracy !== 'yes' || formData.agreeCompliance !== 'yes'))}
             className={`px-6 py-3 rounded-lg bg-black text-white font-semibold transition-all hover:bg-orange flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
             {saving ? 'Saving...' : currentStep === TOTAL_STEPS ? 'Complete Assessment' : 'Next'}
             {currentStep !== TOTAL_STEPS && !saving && <ChevronRight className='w-4 h-4' />}

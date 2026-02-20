@@ -11,6 +11,7 @@ const VERIFICATION_CATEGORIES = [
 
 interface ProgressState {
   assessmentComplete: boolean;
+  anyDocUploaded: boolean;
   allDocsUploaded: boolean;
   tradeProfileComplete: boolean;
   loading: boolean;
@@ -30,6 +31,7 @@ interface DashboardProgressContextType {
   progress: ProgressState;
   unlocked: UnlockedTabs;
   refresh: () => Promise<void>;
+  unlockTradeProfile: () => void;
 }
 
 const DashboardProgressContext = createContext<DashboardProgressContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ const DashboardProgressContext = createContext<DashboardProgressContextType | un
 export function DashboardProgressProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState<ProgressState>({
     assessmentComplete: false,
+    anyDocUploaded: false,
     allDocsUploaded: false,
     tradeProfileComplete: false,
     loading: true,
@@ -50,24 +53,23 @@ export function DashboardProgressProvider({ children }: { children: ReactNode })
       ]);
 
       let assessmentComplete = false;
+      let anyDocUploaded = false;
       let allDocsUploaded = false;
       let tradeProfileComplete = false;
 
       if (assessmentRes.status === 'fulfilled' && assessmentRes.value.success) {
         const data = assessmentRes.value.data;
-        // Assessment is complete if the compliance confirmation step is done (last section)
         const hasConfirmed = data.confirmAccuracy === 'yes' && data.agreeCompliance === 'yes';
-        // Fallback: also check for old-format assessments or any substantial data
         const hasAnswers = data.country && (data.businessRegistered || data.haccpProcess || data.plantBasedConfirmation);
         assessmentComplete = hasConfirmed || !!hasAnswers;
 
-        // Check verification docs
         if (data.documents && Array.isArray(data.documents)) {
           const uploadedCategories = new Set(
             data.documents
               .filter((d: any) => d.category && VERIFICATION_CATEGORIES.includes(d.category))
               .map((d: any) => d.category)
           );
+          anyDocUploaded = uploadedCategories.size > 0;
           allDocsUploaded = uploadedCategories.size >= VERIFICATION_CATEGORIES.length;
         }
       }
@@ -79,12 +81,27 @@ export function DashboardProgressProvider({ children }: { children: ReactNode })
 
       setProgress({
         assessmentComplete,
+        anyDocUploaded,
         allDocsUploaded,
         tradeProfileComplete,
         loading: false,
       });
     } catch {
       setProgress((prev) => ({ ...prev, loading: false }));
+    }
+  }, []);
+
+  const [tradeProfileManuallyUnlocked, setTradeProfileManuallyUnlocked] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('tradeProfileUnlocked') === 'true';
+    }
+    return false;
+  });
+
+  const unlockTradeProfile = useCallback(() => {
+    setTradeProfileManuallyUnlocked(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tradeProfileUnlocked', 'true');
     }
   }, []);
 
@@ -96,14 +113,14 @@ export function DashboardProgressProvider({ children }: { children: ReactNode })
     home: true,
     exportReadiness: progress.assessmentComplete,
     verification: progress.assessmentComplete,
-    documents: progress.allDocsUploaded,
-    tradeProfile: progress.allDocsUploaded,
+    documents: progress.anyDocUploaded,
+    tradeProfile: tradeProfileManuallyUnlocked || progress.tradeProfileComplete,
     products: progress.tradeProfileComplete,
     settings: true,
   };
 
   return (
-    <DashboardProgressContext.Provider value={{ progress, unlocked, refresh: fetchProgress }}>
+    <DashboardProgressContext.Provider value={{ progress, unlocked, refresh: fetchProgress, unlockTradeProfile }}>
       {children}
     </DashboardProgressContext.Provider>
   );

@@ -76,7 +76,7 @@ export default function VerificationPage() {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
   const { toast } = useToast();
-  const { refresh: refreshProgress } = useDashboardProgress();
+  const { refresh: refreshProgress, unlockTradeProfile } = useDashboardProgress();
 
   useEffect(() => {
     const loadDocuments = async () => {
@@ -268,7 +268,7 @@ export default function VerificationPage() {
                 ? 'All your documents have been approved. You are verified. Start adding products.'
                 : overallStatus === 'under_review'
                   ? 'All documents uploaded. Waiting for admin review.'
-                  : `Upload required documents to complete your verification. ${uploadedCount}/${totalCount} uploaded.`}
+                  : `Upload required documents to complete your verification. Name documents accordingly. ${uploadedCount}/${totalCount} uploaded.`}
             </p>
           </div>
         </div>
@@ -408,13 +408,23 @@ export default function VerificationPage() {
       <div className='bg-white rounded-xl border border-gray-200 p-6'>
         <h2 className={`text-xl text-gray-900 mb-4 ${josefinSemiBold.className}`}>Next Steps</h2>
         <button
-          onClick={() => router.push('/dashboard/trade-profile')}
-          className={`w-full bg-transparent border-2 border-gray-900 text-gray-900 rounded-lg py-3 px-4 font-semibold transition-all hover:bg-orange hover:border-orange hover:text-white flex items-center justify-center gap-2 mb-3 ${josefinSemiBold.className}`}>
+          onClick={() => {
+            unlockTradeProfile();
+            router.push('/dashboard/trade-profile');
+          }}
+          disabled={uploadedCount < totalCount}
+          className={`w-full rounded-lg py-3 px-4 font-semibold transition-all flex items-center justify-center gap-2 mb-3 ${
+            uploadedCount >= totalCount
+              ? 'bg-transparent border-2 border-gray-900 text-gray-900 hover:bg-orange hover:border-orange hover:text-white'
+              : 'bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed'
+          } ${josefinSemiBold.className}`}>
           Complete Trade Profile
           <ArrowRight className='w-4 h-4' />
         </button>
         <p className={`text-xs text-gray-500 ${josefinRegular.className}`}>
-          Set up your trade profile to showcase your business capabilities and unlock trade opportunities.
+          {uploadedCount >= totalCount
+            ? 'All documents uploaded. Set up your trade profile to showcase your business capabilities and unlock trade opportunities.'
+            : `Upload all documents to unlock your trade profile. ${uploadedCount}/${totalCount} uploaded.`}
         </p>
       </div>
     </div>
