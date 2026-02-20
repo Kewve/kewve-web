@@ -147,14 +147,19 @@ export default function ExportReadinessDashboard() {
     // Food Safety & Quality (25 pts)
     let foodSafety = 0;
     const certs: string[] = data.certifications || [];
-    if (certs.includes('HACCP')) foodSafety += 5;
+    if (certs.includes('HACCP')) foodSafety += 4;
     if (certs.includes('GMP')) foodSafety += 2;
-    if (certs.includes('ISO 22000') || certs.includes('FSSC 22000')) foodSafety += 3;
+    if (certs.includes('ISO 22000') || certs.includes('FSSC 22000')) foodSafety += 2;
     if (certs.includes('Organic')) foodSafety += 2;
     if (yes('hygieneRecords')) foodSafety += 3;
-    if (yes('certificateOfAnalysis')) foodSafety += 4;
+    if (yes('certificateOfAnalysis')) foodSafety += 3;
     if (yes('accreditedLabTesting')) foodSafety += 3;
-    if (yes('localFoodAgencyRegistration')) foodSafety += 3;
+    if (yes('localFoodAgencyRegistration')) foodSafety += 2;
+    // Product Traceability (4 pts within food safety)
+    if (yes('traceRawToFinished')) foodSafety += 1;
+    if (yes('identifySuppliers')) foodSafety += 1;
+    if (yes('batchLotNumbers')) foodSafety += 1;
+    if (yes('traceOneStepBackForward')) foodSafety += 1;
 
     // Packaging, Labelling & Shelf Life (20 pts)
     let packLabel = 0;

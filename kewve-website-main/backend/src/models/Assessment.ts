@@ -140,7 +140,7 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
     },
     monthlyProductionCapacity: {
       type: String,
-      enum: ["less-than-1000", "1000-5000", "5000-10000", "10000-50000", "50000-plus"],
+      enum: ["less-than-500", "500-1000", "1000-5000", "5000-plus"],
     },
     consistentSupply: {
       type: String,

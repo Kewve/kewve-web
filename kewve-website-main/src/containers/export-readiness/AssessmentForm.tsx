@@ -10,11 +10,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { assessmentAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 13;
 const STEPS = [
   { id: 'export-context', label: 'Export Context' },
   { id: 'business-legal', label: 'Business & Legal' },
   { id: 'product-definition', label: 'Product Definition' },
+  { id: 'product-traceability', label: 'Product Traceability' },
   { id: 'food-safety', label: 'Food Safety' },
   { id: 'production', label: 'Production & Capacity' },
   { id: 'packaging', label: 'Packaging' },
@@ -80,15 +81,16 @@ export default function AssessmentForm() {
       case 1: return !!d.country && !!d.exportDestination && d.plantBasedConfirmation !== undefined;
       case 2: return d.businessRegistered !== undefined && d.businessDocuments !== undefined && d.taxId !== undefined && d.fixedLocation !== undefined;
       case 3: return d.definedProducts !== undefined && d.consistentIngredients !== undefined && d.documentedIngredientList !== undefined && d.ingredientOriginKnown !== undefined;
-      case 4: return d.haccpProcess !== undefined && d.documentedProcedures !== undefined && d.hygieneRecords !== undefined && d.certificateOfAnalysis !== undefined && d.accreditedLabTesting !== undefined && d.localFoodAgencyRegistration !== undefined;
-      case 5: return !!d.monthlyProductionCapacity && d.consistentSupply !== undefined && d.scalableProduction !== undefined && d.trackProductionVolumes !== undefined && d.qualityControlProcesses !== undefined;
-      case 6: return d.exportPackaging !== undefined && d.knowPackagingMaterials !== undefined && d.internationalShipping !== undefined && d.multipleFormats !== undefined;
-      case 7: return d.labelProductName !== undefined && d.labelIngredients !== undefined && d.labelAllergens !== undefined && d.labelNetWeight !== undefined && d.labelOrigin !== undefined && d.labelStorage !== undefined && d.labelBusinessDetails !== undefined && d.labelsInEnglish !== undefined && d.allergenDeclarations !== undefined && d.shelfLifeInfo !== undefined && d.barcodes !== undefined;
-      case 8: return d.knownShelfLife !== undefined && d.shelfLifeTested !== undefined && d.storageConditionsDefined !== undefined;
-      case 9: return d.canUploadCOA !== undefined;
-      case 10: return d.exportedBefore !== undefined && d.exportGradeCartons !== undefined && d.understandLogistics !== undefined;
-      case 11: return d.businessBankAccount !== undefined && d.internationalPayments !== undefined && d.exportPricing !== undefined && d.paymentTerms !== undefined && d.samplePolicy !== undefined;
-      case 12: return d.confirmAccuracy === 'yes' && d.agreeCompliance === 'yes';
+      case 4: return d.traceRawToFinished !== undefined && d.identifySuppliers !== undefined && d.batchLotNumbers !== undefined && d.traceOneStepBackForward !== undefined;
+      case 5: return d.haccpProcess !== undefined && d.documentedProcedures !== undefined && d.hygieneRecords !== undefined && d.certificateOfAnalysis !== undefined && d.accreditedLabTesting !== undefined && d.localFoodAgencyRegistration !== undefined;
+      case 6: return !!d.monthlyProductionCapacity && d.consistentSupply !== undefined && d.scalableProduction !== undefined && d.trackProductionVolumes !== undefined && d.qualityControlProcesses !== undefined;
+      case 7: return d.exportPackaging !== undefined && d.knowPackagingMaterials !== undefined && d.internationalShipping !== undefined && d.multipleFormats !== undefined;
+      case 8: return d.labelProductName !== undefined && d.labelIngredients !== undefined && d.labelAllergens !== undefined && d.labelNetWeight !== undefined && d.labelOrigin !== undefined && d.labelStorage !== undefined && d.labelBusinessDetails !== undefined && d.labelsInEnglish !== undefined && d.allergenDeclarations !== undefined && d.shelfLifeInfo !== undefined && d.barcodes !== undefined;
+      case 9: return d.knownShelfLife !== undefined && d.shelfLifeTested !== undefined && d.storageConditionsDefined !== undefined;
+      case 10: return d.canUploadCOA !== undefined;
+      case 11: return d.exportedBefore !== undefined && d.exportGradeCartons !== undefined && d.understandLogistics !== undefined;
+      case 12: return d.businessBankAccount !== undefined && d.internationalPayments !== undefined && d.exportPricing !== undefined && d.paymentTerms !== undefined && d.samplePolicy !== undefined;
+      case 13: return d.confirmAccuracy === 'yes' && d.agreeCompliance === 'yes';
       default: return false;
     }
   };
@@ -269,6 +271,30 @@ export default function AssessmentForm() {
       case 4:
         return (
           <div className='space-y-6'>
+            {sectionHeader('Product Traceability', 'Checks whether products can be traced through the supply chain.')}
+            <div>
+              <Label className='text-black mb-3 block'>Do you trace products from raw materials to finished goods?</Label>
+              <YesNoButton value={(formData.traceRawToFinished as 'yes' | 'no') || ''} onValueChange={(v) => set('traceRawToFinished', v)} />
+            </div>
+            <div>
+              <Label className='text-black mb-3 block'>Can you identify raw material suppliers?</Label>
+              <YesNoButton value={(formData.identifySuppliers as 'yes' | 'no') || ''} onValueChange={(v) => set('identifySuppliers', v)} />
+            </div>
+            <div>
+              <Label className='text-black mb-3 block'>Do you use batch or lot numbers?</Label>
+              <YesNoButton value={(formData.batchLotNumbers as 'yes' | 'no') || ''} onValueChange={(v) => set('batchLotNumbers', v)} />
+            </div>
+            <div>
+              <Label className='text-black mb-3 block'>Can you trace one step back and one step forward?</Label>
+              <YesNoButton value={(formData.traceOneStepBackForward as 'yes' | 'no') || ''} onValueChange={(v) => set('traceOneStepBackForward', v)} />
+            </div>
+            {note('Traceability is required under UK/EU food law. Simple records are acceptable.')}
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className='space-y-6'>
             {sectionHeader('Food Safety & Quality Management', 'Food safety is a core requirement for UK and EU markets.')}
             <div>
               <Label className='text-black mb-3 block'>Do you follow a documented food safety process (HACCP-based)?</Label>
@@ -312,7 +338,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className='space-y-6'>
             {sectionHeader('Production Capacity & Scalability', 'Buyers need confidence that supply can be delivered consistently.')}
@@ -346,7 +372,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 6:
+      case 7:
         return (
           <div className='space-y-6'>
             {sectionHeader('Packaging Readiness', 'Packaging must protect products during international transport.')}
@@ -369,7 +395,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 7:
+      case 8:
         return (
           <div className='space-y-6'>
             {sectionHeader('Labelling Compliance', 'Incorrect labelling is a common cause of shipment delays or rejection.')}
@@ -422,7 +448,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 8:
+      case 9:
         return (
           <div className='space-y-6'>
             {sectionHeader('Shelf Life & Stability', 'Shelf life data is essential for international trade.')}
@@ -441,7 +467,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 9:
+      case 10:
         return (
           <div className='space-y-6'>
             {sectionHeader('Documentation Readiness', 'Documents support customs clearance and buyer confidence.')}
@@ -467,7 +493,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 10:
+      case 11:
         return (
           <div className='space-y-6'>
             {sectionHeader('Logistics & Export Readiness', 'Basic export logistics readiness.')}
@@ -487,7 +513,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 11:
+      case 12:
         return (
           <div className='space-y-6'>
             {sectionHeader('Financial & Trade Readiness', 'Financial infrastructure for international trade.')}
@@ -515,7 +541,7 @@ export default function AssessmentForm() {
           </div>
         );
 
-      case 12:
+      case 13:
         return (
           <div className='space-y-6'>
             {sectionHeader('Compliance Confirmation', 'Final confirmation before submitting your assessment.')}
