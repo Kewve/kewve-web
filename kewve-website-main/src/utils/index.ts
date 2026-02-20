@@ -1,7 +1,7 @@
 import { cn } from '@/utils/cn';
 import { backgroundColors, getRandomColor } from '@/utils/color';
 import { formatCurrency } from '@/utils/formatCurrency';
-import { titleFont, josefinSemiBold, poppinsRegular, josefinRegular, regalDisplay } from '@/utils/fonts';
+import { titleFont, josefinSemiBold, poppinsRegular, josefinRegular, regalDisplay, dmSans, dmSerifDisplay } from '@/utils/fonts';
 
 export {
   cn,
@@ -13,4 +13,6 @@ export {
   poppinsRegular,
   josefinRegular,
   regalDisplay,
+  dmSans,
+  dmSerifDisplay,
 };
