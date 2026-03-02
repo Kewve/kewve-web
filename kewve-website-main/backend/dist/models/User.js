@@ -20,6 +20,11 @@ const UserSchema = new Schema({
         required: [true, "Name is required"],
         trim: true,
     },
+    role: {
+        type: String,
+        enum: ["producer", "admin"],
+        default: "producer",
+    },
     businessName: {
         type: String,
         trim: true,
@@ -27,6 +32,19 @@ const UserSchema = new Schema({
     country: {
         type: String,
         trim: true,
+    },
+    discountCodeUsed: {
+        type: String,
+        trim: true,
+        uppercase: true,
+    },
+    resetToken: {
+        type: String,
+        select: false,
+    },
+    resetTokenExpiry: {
+        type: Date,
+        select: false,
     },
 }, {
     timestamps: true,

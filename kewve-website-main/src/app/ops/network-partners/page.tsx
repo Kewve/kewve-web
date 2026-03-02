@@ -13,7 +13,7 @@ export default function NetworkPartnersPage() {
         </h1>
         <button
           type="button"
-          className="flex items-center gap-2 bg-[#1a2e23] text-white rounded-lg px-4 py-2.5 text-sm hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 bg-[#ed722d] text-white rounded-lg px-4 py-2.5 text-sm hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4" />
           Add Partner

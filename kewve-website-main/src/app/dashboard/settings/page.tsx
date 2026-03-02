@@ -130,7 +130,7 @@ export default function SettingsPage() {
         <button
           onClick={handleSaveChanges}
           disabled={saving}
-          className={`mt-5 bg-[#1a2e23] text-white rounded-lg py-2.5 px-5 text-sm transition-colors hover:bg-[#243d2f] disabled:opacity-60 ${josefinSemiBold.className}`}>
+          className={`mt-5 bg-[#ed722d] text-white rounded-lg py-2.5 px-5 text-sm transition-colors hover:opacity-90 disabled:opacity-60 ${josefinSemiBold.className}`}>
           {saving ? (
             <span className='flex items-center gap-2'>
               <Loader2 className='w-4 h-4 animate-spin' />

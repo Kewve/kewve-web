@@ -230,7 +230,7 @@ export default function ProductFormPage() {
               onClick={() => handleTabClick(index)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm border transition-colors ${josefinRegular.className} ${
                 isActive
-                  ? 'bg-[#1a2e23] text-white border-[#1a2e23]'
+                  ? 'bg-[#ed722d] text-white border-[#ed722d]'
                   : isCompleted
                     ? 'bg-white text-gray-700 border-gray-300'
                     : 'bg-white text-gray-500 border-gray-200'
@@ -433,13 +433,13 @@ export default function ProductFormPage() {
           <button
             onClick={handleSave}
             disabled={saving || uploadingImage}
-            className={`px-5 py-2.5 rounded-lg text-sm bg-[#1a2e23] text-white transition-colors hover:bg-[#243d2f] disabled:opacity-60 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
+            className={`px-5 py-2.5 rounded-lg text-sm bg-[#ed722d] text-white transition-colors hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
             {saving ? (uploadingImage ? 'Uploading image...' : 'Saving...') : 'Save Product'}
           </button>
         ) : (
           <button
             onClick={handleNext}
-            className={`px-5 py-2.5 rounded-lg text-sm bg-[#1a2e23] text-white transition-colors hover:bg-[#243d2f] ${josefinSemiBold.className}`}>
+            className={`px-5 py-2.5 rounded-lg text-sm bg-[#ed722d] text-white transition-colors hover:opacity-90 ${josefinSemiBold.className}`}>
             Next
           </button>
         )}

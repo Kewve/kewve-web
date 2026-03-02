@@ -140,7 +140,7 @@ export default function DocumentsPage() {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className={`flex items-center gap-2 bg-[#1a2e23] text-white rounded-lg py-2.5 px-5 text-sm transition-colors hover:bg-[#243d2f] disabled:opacity-60 ${josefinSemiBold.className}`}>
+          className={`flex items-center gap-2 bg-[#ed722d] text-white rounded-lg py-2.5 px-5 text-sm transition-colors hover:opacity-90 disabled:opacity-60 ${josefinSemiBold.className}`}>
           {uploading ? (
             <>
               <Loader2 className='w-4 h-4 animate-spin' />

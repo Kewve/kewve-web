@@ -101,8 +101,8 @@ export default function AssessmentLanding() {
 
           <Link
             href='/register'
-            className={`group inline-flex items-center gap-2 bg-[#153b2e] text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:bg-[#1a4a3a] cursor-pointer ${josefinSemiBold.className}`}>
-            Get Started — €99
+            className={`group inline-flex items-center gap-2 bg-brand-green text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:opacity-90 cursor-pointer ${josefinSemiBold.className}`}>
+            Get Started — €100
             <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
           </Link>
 
@@ -113,7 +113,7 @@ export default function AssessmentLanding() {
       </section>
 
       {/* How It Works */}
-      <section className='py-16 lg:py-24 bg-[#faf8f5]'>
+      <section className='py-16 lg:py-24 bg-[#d6a53a]'>
         <div className='max-w-5xl mx-auto px-5 lg:px-6'>
           <h2 className={`text-3xl md:text-4xl text-center text-black mb-4 ${titleFont.className}`}>
             How It Works
@@ -170,30 +170,30 @@ export default function AssessmentLanding() {
       </section>
 
       {/* Kewve Promise */}
-      <section className='py-16 lg:py-20 bg-[#153b2e]'>
+      <section className='py-16 lg:py-20 bg-[#d6a53a]'>
         <div className='max-w-3xl mx-auto px-5 lg:px-6 text-center'>
-          <h2 className={`text-3xl md:text-4xl text-white mb-6 ${titleFont.className}`}>
+          <h2 className={`text-3xl md:text-4xl text-black mb-6 ${titleFont.className}`}>
             We Don&apos;t Just Assess — We Walk With You
           </h2>
-          <p className={`text-lg text-white/80 leading-relaxed mb-4 ${josefinRegular.className}`}>
+          <p className={`text-lg text-black leading-relaxed mb-4 ${josefinRegular.className}`}>
             Most readiness tools give you a score and leave you on your own. Kewve is different. Our team works directly
             with you to close every gap, meet every standard, and prepare your products for international shelves.
           </p>
-          <p className={`text-base text-white/60 mb-10 ${josefinRegular.className}`}>
+          <p className={`text-lg text-black mb-10 ${josefinRegular.className}`}>
             When you&apos;re ready, we connect you with verified buyers in the UK and EU who are actively sourcing African
             food &amp; beverage products.
           </p>
 
           <div className='flex flex-wrap justify-center gap-6 mb-10'>
-            <div className='flex items-center gap-2 text-white/90'>
+            <div className='flex items-center gap-2 text-black/90'>
               <Check className='w-5 h-5 text-orange' />
               <span className={`text-sm ${josefinSemiBold.className}`}>Hands-on guidance</span>
             </div>
-            <div className='flex items-center gap-2 text-white/90'>
+            <div className='flex items-center gap-2 text-black/90'>
               <Check className='w-5 h-5 text-orange' />
               <span className={`text-sm ${josefinSemiBold.className}`}>Compliance support</span>
             </div>
-            <div className='flex items-center gap-2 text-white/90'>
+            <div className='flex items-center gap-2 text-black/90'>
               <Check className='w-5 h-5 text-orange' />
               <span className={`text-sm ${josefinSemiBold.className}`}>Buyer introductions</span>
             </div>
@@ -214,7 +214,7 @@ export default function AssessmentLanding() {
           <Link
             href='/register'
             className={`group inline-flex items-center gap-2 bg-orange text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:bg-orange/90 cursor-pointer ${josefinSemiBold.className}`}>
-            Get Started — €99
+            Get Started — €100
             <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
           </Link>
 

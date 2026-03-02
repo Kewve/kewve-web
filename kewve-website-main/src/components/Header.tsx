@@ -40,7 +40,7 @@ function Header({ needsBackground = false }: HeaderProps) {
             Home
           </Link>
           <Link prefetch href='/our-story' className={headerLinkClassName}>
-            Our Story
+            About Us
           </Link>
           <Link prefetch href='/' className='relative flex items-center justify-center shrink-0 mx-4 xl:mx-8'>
             <Image src='/logo-color.png' width={200} height={32} alt='Kewve logo' className='relative z-50 h-8 w-auto' />
@@ -61,7 +61,7 @@ function Header({ needsBackground = false }: HeaderProps) {
                   </button>
                 </>
               ) : (
-                <Link prefetch href='/login' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
+                <Link prefetch href='/login' className={`${headerLinkClassName} bg-brand-green px-4 py-2 rounded hover:opacity-90 transition-colors relative z-10`}>
                   Sign In
                 </Link>
               )}

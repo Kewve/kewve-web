@@ -350,7 +350,7 @@ export default function VerificationPage() {
                           <button
                             onClick={() => handleUploadClick(doc.id)}
                             disabled={loadingDocs}
-                            className={`flex items-center gap-1.5 text-xs text-white bg-[#1a2e23] hover:bg-[#243d2f] transition-colors px-3 py-1.5 rounded-lg disabled:opacity-50 ${josefinSemiBold.className}`}>
+                            className={`flex items-center gap-1.5 text-xs text-white bg-[#ed722d] hover:opacity-90 transition-colors px-3 py-1.5 rounded-lg disabled:opacity-50 ${josefinSemiBold.className}`}>
                             <RefreshCw className='w-3.5 h-3.5' />
                             Re-upload
                           </button>

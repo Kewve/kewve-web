@@ -1,6 +1,7 @@
 'use server';
 
 import Stripe from 'stripe';
+import { sendEmail } from '@/utils/emailConfig';
 
 export async function completeRegistration(sessionId: string) {
   try {
@@ -33,6 +34,7 @@ export async function completeRegistration(sessionId: string) {
         name: metadata.registration_name,
         businessName: metadata.registration_businessName || undefined,
         country: metadata.registration_country || undefined,
+        discountCodeUsed: metadata.registration_discountCode || undefined,
       }),
     });
 
@@ -62,6 +64,39 @@ export async function completeRegistration(sessionId: string) {
       }
 
       return { error: registerData.message || 'Failed to create account.' };
+    }
+
+    try {
+      const footerImageSrc = 'cid:footer-image';
+      await sendEmail({
+        to: metadata.registration_email,
+        subject: 'Welcome to Kewve',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
+            <h2 style="color: #1a2e23; margin: 0 0 16px;">Welcome to Kewve</h2>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">Hi ${metadata.registration_name},</p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">
+              Your payment was successful and your account is now active.
+            </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">
+              You can now complete your export readiness assessment and start your journey to UK and EU markets.
+            </p>
+            <p style="color: #666; font-size: 13px; margin-top: 24px;">
+              If you need support, contact us at hello@kewve.com.
+            </p>
+            <div style="margin-top: 28px; text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+              <img
+                src="${footerImageSrc}"
+                alt="Kewve Footer"
+                style="max-width: 100%; height: auto; display: block; margin: 0 auto;"
+              />
+            </div>
+          </div>
+        `,
+        attachFooterImage: true,
+      });
+    } catch (emailError) {
+      console.error('Welcome email send error:', emailError);
     }
 
     return {

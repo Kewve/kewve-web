@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Info, Lightbulb, BookOpen } from 'lucide-react';
 import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
 import { Label } from '@/components/ui/label';
 import { YesNoButton } from '@/components/ui/yes-no-button';
@@ -33,7 +33,10 @@ const COUNTRIES = [
 
 const selectClass = 'flex h-10 w-full rounded-md border border-black bg-white px-3 py-2 text-black text-sm ring-offset-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2';
 
-const CERTIFICATIONS = ['HACCP', 'GMP', 'ISO 22000', 'FSSC 22000', 'Organic', 'None', 'Other'];
+type ExplanationItem = {
+  term: string;
+  detail: string;
+};
 
 export default function AssessmentForm() {
   const router = useRouter();
@@ -62,7 +65,23 @@ export default function AssessmentForm() {
       const response = await assessmentAPI.getAssessment();
       if (response.success && response.data) {
         const { userId, documents, checklistState, createdAt, updatedAt, _id, __v, ...data } = response.data;
-        setFormData(data);
+        const certifications: string[] = data.certifications || [];
+        const normalizedData = {
+          ...data,
+          haccpCertification:
+            data.haccpCertification !== undefined
+              ? data.haccpCertification
+              : certifications.includes('HACCP')
+                ? 'yes'
+                : 'no',
+          isoCertification:
+            data.isoCertification !== undefined
+              ? data.isoCertification
+              : certifications.includes('ISO 22000') || certifications.includes('FSSC 22000')
+                ? 'yes'
+                : 'no',
+        };
+        setFormData(normalizedData);
       }
     } catch {
       // No existing assessment
@@ -82,7 +101,7 @@ export default function AssessmentForm() {
       case 2: return d.businessRegistered !== undefined && d.businessDocuments !== undefined && d.taxId !== undefined && d.fixedLocation !== undefined;
       case 3: return d.definedProducts !== undefined && d.consistentIngredients !== undefined && d.documentedIngredientList !== undefined && d.ingredientOriginKnown !== undefined;
       case 4: return d.traceRawToFinished !== undefined && d.identifySuppliers !== undefined && d.batchLotNumbers !== undefined && d.traceOneStepBackForward !== undefined;
-      case 5: return d.haccpProcess !== undefined && d.documentedProcedures !== undefined && d.hygieneRecords !== undefined && d.certificateOfAnalysis !== undefined && d.accreditedLabTesting !== undefined && d.localFoodAgencyRegistration !== undefined;
+      case 5: return d.haccpProcess !== undefined && d.haccpCertification !== undefined && d.isoCertification !== undefined && d.documentedProcedures !== undefined && d.hygieneRecords !== undefined && d.certificateOfAnalysis !== undefined && d.accreditedLabTesting !== undefined && d.localFoodAgencyRegistration !== undefined;
       case 6: return !!d.monthlyProductionCapacity && d.consistentSupply !== undefined && d.scalableProduction !== undefined && d.trackProductionVolumes !== undefined && d.qualityControlProcesses !== undefined;
       case 7: return d.exportPackaging !== undefined && d.knowPackagingMaterials !== undefined && d.internationalShipping !== undefined && d.multipleFormats !== undefined;
       case 8: return d.labelProductName !== undefined && d.labelIngredients !== undefined && d.labelAllergens !== undefined && d.labelNetWeight !== undefined && d.labelOrigin !== undefined && d.labelStorage !== undefined && d.labelBusinessDetails !== undefined && d.labelsInEnglish !== undefined && d.allergenDeclarations !== undefined && d.shelfLifeInfo !== undefined && d.barcodes !== undefined;
@@ -167,26 +186,44 @@ export default function AssessmentForm() {
     }
   };
 
-  const toggleCert = (cert: string) => {
-    const current: string[] = formData.certifications || [];
-    if (cert === 'None') {
-      set('certifications', current.includes('None') ? [] : ['None']);
-    } else {
-      const without = current.filter((c: string) => c !== 'None');
-      set('certifications', without.includes(cert) ? without.filter((c: string) => c !== cert) : [...without, cert]);
-    }
-  };
-
   const note = (text: string) => (
-    <div className='bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mt-4'>
-      <p className={`text-xs text-amber-800 ${josefinRegular.className}`}>{text}</p>
+    <div className='bg-amber-50 border-l-4 border-amber-500 border border-amber-200 rounded-lg px-4 py-3 mt-4 shadow-sm'>
+      <div className='flex items-center gap-1.5 mb-1'>
+        <Lightbulb className='w-3.5 h-3.5 text-amber-700' />
+        <p className={`text-[11px] uppercase tracking-wide text-amber-700 ${josefinSemiBold.className}`}>Tip</p>
+      </div>
+      <p className={`text-xs text-amber-900 ${josefinRegular.className}`}>{text}</p>
+    </div>
+  );
+
+  const topExplanation = (text: string) => (
+    <div className='bg-blue-50 border-l-4 border-blue-500 border border-blue-200 rounded-lg px-4 py-3 -mt-2 shadow-sm'>
+      <div className='flex items-center gap-1.5 mb-1'>
+        <Info className='w-3.5 h-3.5 text-blue-700' />
+        <p className={`text-[11px] uppercase tracking-wide text-blue-700 ${josefinSemiBold.className}`}>Quick context</p>
+      </div>
+      <p className={`text-sm text-black ${josefinRegular.className}`}>{text}</p>
+    </div>
+  );
+
+  const explanationList = (items: ExplanationItem[]) => (
+    <div className='bg-green-50 border-l-4 border-green-600 border border-green-200 rounded-lg px-4 py-3 space-y-2 shadow-sm'>
+      <div className='flex items-center gap-1.5 mb-1'>
+        <BookOpen className='w-3.5 h-3.5 text-green-700' />
+        <p className={`text-[11px] uppercase tracking-wide text-green-700 ${josefinSemiBold.className}`}>Term guide</p>
+      </div>
+      {items.map((item) => (
+        <p key={item.term} className={`text-sm text-black ${josefinRegular.className}`}>
+          <span className='font-semibold'>{item.term}:</span> {item.detail}
+        </p>
+      ))}
     </div>
   );
 
   const sectionHeader = (title: string, desc: string) => (
     <div>
       <h2 className={`text-3xl md:text-4xl font-bold text-black mb-2 ${titleFont.className}`}>{title}</h2>
-      <p className={`text-base text-black-muted mb-6 ${josefinRegular.className}`}>{desc}</p>
+      {desc ? <p className={`text-base text-black-muted mb-6 ${josefinRegular.className}`}>{desc}</p> : null}
     </div>
   );
 
@@ -195,16 +232,21 @@ export default function AssessmentForm() {
       case 1:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Export Context', 'Confirm basic eligibility and your target export market.')}
+            {sectionHeader('Export Context', '')}
+            {topExplanation('Confirm basic eligibility and your target export market. This section helps us understand where you operate and where you want to export.')}
+            {explanationList([
+              { term: 'Country of operation', detail: 'The country where your business produces or processes the product. Example: Nigeria.' },
+              { term: 'Export destination', detail: 'Where you want to sell your product. Example: United Kingdom (UK) or European Union (EU).' },
+            ])}
             <div>
-              <Label className='text-black mb-2 block'>Country of operation</Label>
+              <Label className='text-black mb-2 block'>Country of operation (where production or processing happens)</Label>
               <select value={formData.country || ''} onChange={(e) => set('country', e.target.value)} className={selectClass}>
                 <option value=''>Select a country</option>
                 {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <Label className='text-black mb-2 block'>Export destination</Label>
+              <Label className='text-black mb-2 block'>Export destination (UK, EU, or both)</Label>
               <select value={formData.exportDestination || ''} onChange={(e) => set('exportDestination', e.target.value)} className={selectClass}>
                 <option value=''>Select destination</option>
                 <option value='uk'>UK</option>
@@ -213,23 +255,30 @@ export default function AssessmentForm() {
               </select>
             </div>
             <div>
-              <Label className='text-black mb-3 block'>I confirm all products are plant-based and contain no meat, seafood, or animal by-products</Label>
+              <Label className='text-black mb-3 block'>I confirm all products are plant-based and contain no meat, seafood, or animal by-products.</Label>
               <YesNoButton value={(formData.plantBasedConfirmation as 'yes' | 'no') || ''} onValueChange={(v) => set('plantBasedConfirmation', v)} />
             </div>
-            {note('If products contain animal or seafood ingredients, they are not eligible for Kewve.')}
+            {note('Kewve supports only plant-based products (such as grains, spices, flours, nuts, seeds, and dried fruits). Products containing animal or seafood ingredients are not eligible.')}
           </div>
         );
 
       case 2:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Business & Legal Readiness', 'UK and EU buyers expect exporters to be legally registered and traceable.')}
+            {sectionHeader('Business & Legal Readiness', '')}
+            {topExplanation('Legal registration and traceability are minimum expectations for export trade. This section checks if your business legally exists and can be traced.')}
+            {explanationList([
+              { term: 'Business registered', detail: 'Your business is officially registered with your government (for example, CAC registration in Nigeria).' },
+              { term: 'Registration documents', detail: 'Official papers that prove your business is registered, such as a Certificate of Incorporation.' },
+              { term: 'Tax identification number', detail: 'A number issued by tax authorities to identify your business.' },
+              { term: 'Fixed production location', detail: 'A permanent place where production happens, such as a factory, warehouse, or processing centre.' },
+            ])}
             <div>
-              <Label className='text-black mb-3 block'>Is your business legally registered in your country?</Label>
+              <Label className='text-black mb-3 block'>Is your business legally registered in your country of operation?</Label>
               <YesNoButton value={(formData.businessRegistered as 'yes' | 'no') || ''} onValueChange={(v) => set('businessRegistered', v)} />
             </div>
             <div>
-              <Label className='text-black mb-3 block'>Do you have official business registration documents?</Label>
+              <Label className='text-black mb-3 block'>Do you have official business registration documents (for example, Certificate of Incorporation)?</Label>
               <YesNoButton value={(formData.businessDocuments as 'yes' | 'no') || ''} onValueChange={(v) => set('businessDocuments', v)} />
             </div>
             <div>
@@ -247,9 +296,16 @@ export default function AssessmentForm() {
       case 3:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Product Definition & Consistency', 'Buyers and regulators require clear and consistent product information.')}
+            {sectionHeader('Product Definition & Consistency', '')}
+            {topExplanation('Buyers and regulators require clear and consistent product information. This section checks whether your product is clearly defined and consistent.')}
+            {explanationList([
+              { term: 'Clearly defined product', detail: "You can clearly describe what you sell (for example, 'Dried ginger powder, 25kg bags')." },
+              { term: 'Ingredient consistency', detail: 'Ingredients do not change from one batch to another.' },
+              { term: 'Documented ingredient list', detail: 'A written list of all ingredients used.' },
+              { term: 'Ingredient origin', detail: 'You know where raw materials come from (for example, ginger sourced from Kaduna State).' },
+            ])}
             <div>
-              <Label className='text-black mb-3 block'>Do you have clearly defined products intended for export?</Label>
+              <Label className='text-black mb-3 block'>Do you have clearly defined products intended for export (product type, form, and pack size)?</Label>
               <YesNoButton value={(formData.definedProducts as 'yes' | 'no') || ''} onValueChange={(v) => set('definedProducts', v)} />
             </div>
             <div>
@@ -261,7 +317,7 @@ export default function AssessmentForm() {
               <YesNoButton value={(formData.documentedIngredientList as 'yes' | 'no') || ''} onValueChange={(v) => set('documentedIngredientList', v)} />
             </div>
             <div>
-              <Label className='text-black mb-3 block'>Do you know the country of origin of all raw ingredients?</Label>
+              <Label className='text-black mb-3 block'>Do you know the origin of all raw ingredients (farm, region, or country)?</Label>
               <YesNoButton value={(formData.ingredientOriginKnown as 'yes' | 'no') || ''} onValueChange={(v) => set('ingredientOriginKnown', v)} />
             </div>
             {note('Inconsistent ingredients or unclear origins are common reasons for buyer rejection.')}
@@ -271,7 +327,13 @@ export default function AssessmentForm() {
       case 4:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Product Traceability', 'Checks whether products can be traced through the supply chain.')}
+            {sectionHeader('Product Traceability', '')}
+            {topExplanation('This section checks if your product can be traced through the supply chain. Traceability is required under UK/EU food law. Simple records are acceptable.')}
+            {explanationList([
+              { term: 'Trace raw materials', detail: 'Ability to identify where raw materials came from.' },
+              { term: 'Batch or lot numbers', detail: 'Codes used to identify specific production batches.' },
+              { term: 'One step back, one step forward', detail: 'You know who supplied you and who you sold to.' },
+            ])}
             <div>
               <Label className='text-black mb-3 block'>Do you trace products from raw materials to finished goods?</Label>
               <YesNoButton value={(formData.traceRawToFinished as 'yes' | 'no') || ''} onValueChange={(v) => set('traceRawToFinished', v)} />
@@ -295,24 +357,26 @@ export default function AssessmentForm() {
       case 5:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Food Safety & Quality Management', 'Food safety is a core requirement for UK and EU markets.')}
+            {sectionHeader('Food Safety & Quality Management', '')}
+            {topExplanation('Food safety is a core requirement for UK and EU markets.')}
+            {explanationList([
+              { term: 'HACCP', detail: 'A food safety system that identifies risks during production and sets controls to prevent unsafe food.' },
+              { term: 'GMP', detail: 'Basic rules that ensure food is produced in a clean, controlled, and consistent environment.' },
+              { term: 'ISO 22000', detail: 'An international standard for managing food safety across production.' },
+              { term: 'FSSC 22000', detail: 'A globally recognised food safety certification, often required by large buyers and retailers.' },
+              { term: 'Organic', detail: 'A certification showing production without synthetic chemicals or GMOs under approved standards.' },
+            ])}
             <div>
-              <Label className='text-black mb-3 block'>Do you follow a documented food safety process (HACCP-based)?</Label>
+              <Label className='text-black mb-3 block'>Do you follow a documented HACCP-based food safety process?</Label>
               <YesNoButton value={(formData.haccpProcess as 'yes' | 'no') || ''} onValueChange={(v) => set('haccpProcess', v)} />
             </div>
             <div>
-              <Label className='text-black mb-3 block'>Which certifications do you hold?</Label>
-              <div className='flex flex-wrap gap-2'>
-                {CERTIFICATIONS.map((cert) => {
-                  const selected = (formData.certifications || []).includes(cert);
-                  return (
-                    <button key={cert} type='button' onClick={() => toggleCert(cert)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${selected ? 'bg-[#153b2e] text-white' : 'bg-gray-100 text-black-muted hover:bg-gray-200'}`}>
-                      {cert}
-                    </button>
-                  );
-                })}
-              </div>
+              <Label className='text-black mb-3 block'>Have you submitted HACCP certification separately?</Label>
+              <YesNoButton value={(formData.haccpCertification as 'yes' | 'no') || ''} onValueChange={(v) => set('haccpCertification', v)} />
+            </div>
+            <div>
+              <Label className='text-black mb-3 block'>Have you submitted ISO 22000/FSSC 22000 certification separately?</Label>
+              <YesNoButton value={(formData.isoCertification as 'yes' | 'no') || ''} onValueChange={(v) => set('isoCertification', v)} />
             </div>
             <div>
               <Label className='text-black mb-3 block'>Are food safety procedures documented and followed by staff?</Label>
@@ -341,9 +405,16 @@ export default function AssessmentForm() {
       case 6:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Production Capacity & Scalability', 'Buyers need confidence that supply can be delivered consistently.')}
+            {sectionHeader('Production Capacity & Scalability', '')}
+            {topExplanation('Buyers need confidence that supply can be delivered reliably. This section checks your ability to supply consistent volumes.')}
+            {explanationList([
+              { term: 'Monthly production capacity', detail: 'How much you can produce in one month. Example: 2 tonnes per month.' },
+              { term: 'Consistent specifications', detail: 'Product quality remains the same each time.' },
+              { term: 'Ability to scale', detail: 'You can increase production if demand grows.' },
+              { term: 'Output tracking', detail: 'Keeping records of production quantities.' },
+            ])}
             <div>
-              <Label className='text-black mb-2 block'>Current monthly production capacity</Label>
+              <Label className='text-black mb-2 block'>Current monthly production capacity (how much you produce each month)</Label>
               <select value={formData.monthlyProductionCapacity || ''} onChange={(e) => set('monthlyProductionCapacity', e.target.value)} className={selectClass}>
                 <option value=''>Select capacity</option>
                 <option value='less-than-500'>Less than 500 kg</option>
@@ -375,9 +446,15 @@ export default function AssessmentForm() {
       case 7:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Packaging Readiness', 'Packaging must protect products during international transport.')}
+            {sectionHeader('Packaging Readiness', '')}
+            {topExplanation('Packaging must protect products during international transport. This section checks whether packaging protects products during export transit and handling.')}
+            {explanationList([
+              { term: 'Export packaging', detail: 'Packaging that is strong enough for long-distance shipping.' },
+              { term: 'Packaging materials', detail: 'Knowing the materials used in your packaging.' },
+              { term: 'Bulk or retail formats', detail: 'Large bags for wholesale buyers or smaller packs for retail buyers.' },
+            ])}
             <div>
-              <Label className='text-black mb-3 block'>Are products packaged for export rather than local retail only?</Label>
+              <Label className='text-black mb-3 block'>Are products packaged for export (not local retail only)?</Label>
               <YesNoButton value={(formData.exportPackaging as 'yes' | 'no') || ''} onValueChange={(v) => set('exportPackaging', v)} />
             </div>
             <div>
@@ -398,7 +475,8 @@ export default function AssessmentForm() {
       case 8:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Labelling Compliance', 'Incorrect labelling is a common cause of shipment delays or rejection.')}
+            {sectionHeader('Labelling Compliance', '')}
+            {topExplanation('Incorrect labelling is a common cause of shipment delays or rejection. This section checks whether labels meet legal requirements for UK/EU markets.')}
             <p className={`text-sm text-black-muted -mt-4 mb-2 ${josefinRegular.className}`}>Do your product labels include:</p>
             <div>
               <Label className='text-black mb-3 block'>Product name</Label>
@@ -451,7 +529,13 @@ export default function AssessmentForm() {
       case 9:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Shelf Life & Stability', 'Shelf life data is essential for international trade.')}
+            {sectionHeader('Shelf Life & Stability', '')}
+            {topExplanation('Shelf life data is essential for international trade. This section checks shelf life knowledge and validation for your products.')}
+            {explanationList([
+              { term: 'Shelf life', detail: 'How long the product remains safe and usable.' },
+              { term: 'Shelf life testing', detail: 'Tests used to prove your shelf life claim.' },
+              { term: 'Storage conditions', detail: "Instructions such as 'store in a cool, dry place'." },
+            ])}
             <div>
               <Label className='text-black mb-3 block'>Do you know the shelf life of your products?</Label>
               <YesNoButton value={(formData.knownShelfLife as 'yes' | 'no') || ''} onValueChange={(v) => set('knownShelfLife', v)} />
@@ -470,7 +554,14 @@ export default function AssessmentForm() {
       case 10:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Documentation Readiness', 'Documents support customs clearance and buyer confidence.')}
+            {sectionHeader('Documentation Readiness', '')}
+            {topExplanation('Documents support customs clearance and buyer confidence. This section checks availability of key export documents.')}
+            {explanationList([
+              { term: 'Certificate of Analysis (COA)', detail: 'Lab report confirming safety/quality parameters.' },
+              { term: 'Product specification sheet', detail: 'Document describing product details and limits.' },
+              { term: 'Packing list', detail: 'Document listing the contents of the shipment.' },
+              { term: 'Export licence', detail: 'Government permission required for some products/markets.' },
+            ])}
             <p className={`text-sm text-black-muted -mt-4 mb-2 ${josefinRegular.className}`}>
               Can you upload the following documents where available?
             </p>
@@ -496,7 +587,13 @@ export default function AssessmentForm() {
       case 11:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Logistics & Export Readiness', 'Basic export logistics readiness.')}
+            {sectionHeader('Logistics & Export Understanding', '')}
+            {topExplanation('This section checks understanding of shipping terms and basic export logistics readiness.')}
+            {explanationList([
+              { term: 'FOB', detail: 'Seller responsibility ends at the export port after goods are loaded.' },
+              { term: 'CIF', detail: 'Seller covers shipping and insurance to destination.' },
+              { term: 'Lead time', detail: 'Time from order confirmation to shipment.' },
+            ])}
             <div>
               <Label className='text-black mb-3 block'>Have you exported internationally before?</Label>
               <YesNoButton value={(formData.exportedBefore as 'yes' | 'no') || ''} onValueChange={(v) => set('exportedBefore', v)} />
@@ -516,7 +613,8 @@ export default function AssessmentForm() {
       case 12:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Financial & Trade Readiness', 'Financial infrastructure for international trade.')}
+            {sectionHeader('Financial & Trade Readiness', '')}
+            {topExplanation('This section checks your ability to transact internationally.')}
             <div>
               <Label className='text-black mb-3 block'>Do you have a business bank account?</Label>
               <YesNoButton value={(formData.businessBankAccount as 'yes' | 'no') || ''} onValueChange={(v) => set('businessBankAccount', v)} />
@@ -544,7 +642,8 @@ export default function AssessmentForm() {
       case 13:
         return (
           <div className='space-y-6'>
-            {sectionHeader('Compliance Confirmation', 'Final confirmation before submitting your assessment.')}
+            {sectionHeader('Compliance Confirmation', '')}
+            {topExplanation('This section confirms accuracy and commitment to UK/EU export rules.')}
             <label className='flex items-start gap-3 cursor-pointer'>
               <input
                 type='checkbox'

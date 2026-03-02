@@ -23,9 +23,7 @@ function Footer() {
           <Link href='/privacy' className={footerLinkClassName}>
             Privacy Policy
           </Link>
-          <Link href='/marketplace-terms' className={footerLinkClassName}>
-            Marketplace Term & Conditions
-          </Link>
+          
         </div>
         <div className='flex justify-between items-center'>
           <span className={`text-sm lg:text-base text-white ${josefin.className}`}>

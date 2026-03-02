@@ -147,9 +147,12 @@ export default function ExportReadinessDashboard() {
     // Food Safety & Quality (25 pts)
     let foodSafety = 0;
     const certs: string[] = data.certifications || [];
-    if (certs.includes('HACCP')) foodSafety += 4;
+    const hasHaccpCertification = yes('haccpCertification') || certs.includes('HACCP');
+    const hasIsoCertification =
+      yes('isoCertification') || certs.includes('ISO 22000') || certs.includes('FSSC 22000');
+    if (hasHaccpCertification) foodSafety += 4;
+    if (hasIsoCertification) foodSafety += 2;
     if (certs.includes('GMP')) foodSafety += 2;
-    if (certs.includes('ISO 22000') || certs.includes('FSSC 22000')) foodSafety += 2;
     if (certs.includes('Organic')) foodSafety += 2;
     if (yes('hygieneRecords')) foodSafety += 3;
     if (yes('certificateOfAnalysis')) foodSafety += 3;
@@ -386,13 +389,79 @@ export default function ExportReadinessDashboard() {
 
   const actionItems = getActionItems();
 
+  const applyAssessmentUpdatesForCompletedItem = (itemTitle: string, currentData: AssessmentData) => {
+    switch (itemTitle) {
+      case 'Implement HACCP-based food safety process':
+        return {
+          ...currentData,
+          haccpProcess: 'yes',
+          haccpCertification: 'yes',
+          documentedProcedures: 'yes',
+        };
+      case 'Complete accredited lab testing and obtain COA':
+        return {
+          ...currentData,
+          accreditedLabTesting: 'yes',
+          certificateOfAnalysis: 'yes',
+        };
+      case 'Complete business registration and documentation':
+        return {
+          ...currentData,
+          businessRegistered: 'yes',
+          businessDocuments: 'yes',
+          taxId: 'yes',
+        };
+      case 'Update product labels to UK/EU compliance':
+        return {
+          ...currentData,
+          labelsInEnglish: 'yes',
+          allergenDeclarations: 'yes',
+          labelProductName: 'yes',
+          labelIngredients: 'yes',
+          labelAllergens: 'yes',
+          labelNetWeight: 'yes',
+          labelOrigin: 'yes',
+          labelStorage: 'yes',
+          labelBusinessDetails: 'yes',
+          barcodes: 'yes',
+        };
+      case 'Prepare export-grade packaging':
+        return {
+          ...currentData,
+          exportPackaging: 'yes',
+          internationalShipping: 'yes',
+          multipleFormats: 'yes',
+        };
+      case 'Source export cartons and develop logistics plan':
+        return {
+          ...currentData,
+          exportGradeCartons: 'yes',
+          understandLogistics: 'yes',
+        };
+      default:
+        return currentData;
+    }
+  };
+
+  const persistAssessmentUpdates = (nextAssessmentData: AssessmentData) => {
+    assessmentAPI.updateAssessment(nextAssessmentData).catch((error) => {
+      console.error('Failed to save assessment updates from checklist:', error);
+      toast({
+        title: 'Error',
+        description: 'Checklist was saved, but assessment updates could not be synced.',
+        variant: 'destructive',
+      });
+    });
+  };
+
   const toggleMainItem = (itemId: string, items: ActionItem[]) => {
     setChecklistState((prev) => {
+      const wasCompleted = !!prev[itemId]?.completed;
       const newState = {
         ...prev,
         [itemId]: {
           ...prev[itemId],
-          completed: !prev[itemId]?.completed,
+          completed: !wasCompleted,
           steps: prev[itemId]?.steps || {},
         },
       };
@@ -408,6 +477,12 @@ export default function ExportReadinessDashboard() {
             allStepsChecked[stepIdx] = true;
           });
           newState[itemId].steps = allStepsChecked;
+
+          // Marking this item complete means producer fixed the gap,
+          // so we sync related assessment fields to avoid forcing a full retake.
+          const updatedAssessmentData = applyAssessmentUpdatesForCompletedItem(item.title, assessmentData);
+          setAssessmentData(updatedAssessmentData);
+          persistAssessmentUpdates(updatedAssessmentData);
         }
       }
       // Save to API
@@ -479,6 +554,7 @@ export default function ExportReadinessDashboard() {
 
   const toggleStep = (itemId: string, stepIndex: number, items: ActionItem[]) => {
     setChecklistState((prev) => {
+      const wasCompleted = !!prev[itemId]?.completed;
       const newState = {
         ...prev,
         [itemId]: {
@@ -495,6 +571,13 @@ export default function ExportReadinessDashboard() {
       if (item) {
         const allStepsCompleted = item.steps.every((_, idx) => newState[itemId].steps[idx] === true);
         newState[itemId].completed = allStepsCompleted;
+
+        // If this interaction just completed the full item, sync assessment fields.
+        if (allStepsCompleted && !wasCompleted) {
+          const updatedAssessmentData = applyAssessmentUpdatesForCompletedItem(item.title, assessmentData);
+          setAssessmentData(updatedAssessmentData);
+          persistAssessmentUpdates(updatedAssessmentData);
+        }
       }
       // Save to API
       assessmentAPI.updateChecklist(newState).catch((error) => {
@@ -753,16 +836,16 @@ export default function ExportReadinessDashboard() {
               </p>
             </div>
 
-            {/* Retake Assessment */}
+            {/* Update Assessment */}
             <div className='bg-white rounded-lg p-6 lg:p-8 shadow-sm border border-gray-100'>
-              <h2 className={`text-xl font-bold text-black mb-2 ${josefinSemiBold.className}`}>Retake Assessment</h2>
+              <h2 className={`text-xl font-bold text-black mb-2 ${josefinSemiBold.className}`}>Update Assessment</h2>
               <p className={`text-xs text-black-muted mb-4 ${josefinRegular.className}`}>
-                Made improvements? Retake the assessment at any time to update your score and readiness status.
+                Made improvements? Update your assessment anytime. Your completed checklist actions can now sync directly to your readiness data.
               </p>
               <button
                 onClick={() => router.push('/export-readiness/assessment')}
                 className={`w-full bg-black text-white rounded-lg py-3 px-4 font-semibold text-sm transition-all hover:bg-orange flex items-center justify-center gap-2 ${josefinSemiBold.className}`}>
-                Retake Assessment
+                Update Assessment
                 <ArrowRight className='w-4 h-4' />
               </button>
             </div>

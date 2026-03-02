@@ -20,7 +20,7 @@ export function YesNoButton({ value, onValueChange, yesLabel = 'Yes', noLabel = 
         className={cn(
           'px-6 py-3 rounded-lg font-semibold text-sm transition-all',
           value === 'yes'
-            ? 'bg-[#153b2e] text-white'
+            ? 'bg-brand-green text-white'
             : 'bg-gray-100 text-black-muted hover:bg-gray-200'
         )}>
         {yesLabel}

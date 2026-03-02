@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
           <button
             type='submit'
             disabled={loading}
-            className={`w-full bg-[#1a2e23] text-white rounded-lg py-2.5 text-sm transition-colors hover:bg-[#243d2f] disabled:opacity-50 flex items-center justify-center gap-2 ${josefinSemiBold.className}`}>
+            className={`w-full bg-[#ed722d] text-white rounded-lg py-2.5 text-sm transition-colors hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 ${josefinSemiBold.className}`}>
             {loading && <Loader2 className='w-4 h-4 animate-spin' />}
             Sign In
           </button>

@@ -229,7 +229,7 @@ We're launching an Export Readiness Assessment to help African food and beverage
             <div className='relative w-full h-full max-w-lg'>
               <img
                 src='/images/empty.svg'
-                alt='African food products'
+                alt='African food & beverages'
                 className='object-contain w-full h-full'
               />
             </div>

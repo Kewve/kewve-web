@@ -121,7 +121,7 @@ export default function ProductsPage() {
             disabled={!allVerified}
             className={`flex items-center gap-2 rounded-lg py-2.5 px-5 text-sm transition-colors ${josefinSemiBold.className} ${
               allVerified
-                ? 'bg-[#1a2e23] text-white hover:bg-[#243d2f]'
+                ? 'bg-[#ed722d] text-white hover:opacity-90'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}>
             {allVerified ? <Plus className='w-4 h-4' /> : <Lock className='w-4 h-4' />}
@@ -149,7 +149,7 @@ export default function ProductsPage() {
               disabled={!allVerified}
               className={`inline-flex items-center gap-2 rounded-lg py-2.5 px-5 text-sm transition-colors ${josefinSemiBold.className} ${
                 allVerified
-                  ? 'bg-[#1a2e23] text-white hover:bg-[#243d2f]'
+                  ? 'bg-[#ed722d] text-white hover:opacity-90'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}>
               {allVerified ? <Plus className='w-4 h-4' /> : <Lock className='w-4 h-4' />}

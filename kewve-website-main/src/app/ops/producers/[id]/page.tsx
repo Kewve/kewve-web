@@ -36,6 +36,7 @@ interface ProducerData {
     email: string;
     businessName?: string;
     country?: string;
+    discountCodeUsed?: string;
     createdAt: string;
   };
   assessment: {
@@ -197,6 +198,7 @@ export default function ProducerDetailPage() {
             <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-500 ${josefinRegular.className}`}>
               <span>{user.email}</span>
               {user.country && <span>{user.country}</span>}
+              {user.discountCodeUsed && <span>Discount code: {user.discountCodeUsed}</span>}
               <span>Joined {formatDate(user.createdAt)}</span>
             </div>
           </div>
@@ -209,7 +211,7 @@ export default function ProducerDetailPage() {
             <button
               onClick={handleVerify}
               disabled={verifyLoading}
-              className={`inline-flex items-center gap-2 bg-[#1a2e23] text-white rounded-lg px-5 py-2 text-sm hover:bg-[#243d2f] transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
+              className={`inline-flex items-center gap-2 bg-[#ed722d] text-white rounded-lg px-5 py-2 text-sm hover:opacity-90 transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
               {verifyLoading ? <Loader2 className='w-4 h-4 animate-spin' /> : <ShieldCheck className='w-4 h-4' />}
               Mark as Verified
             </button>
@@ -313,7 +315,7 @@ export default function ProducerDetailPage() {
                           <button
                             onClick={() => handleApprove(doc._id)}
                             disabled={isLoading}
-                            className={`inline-flex items-center gap-1.5 bg-green-600 text-white rounded-lg px-3 py-1.5 text-xs hover:bg-green-700 transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
+                            className={`inline-flex items-center gap-1.5 bg-brand-green text-white rounded-lg px-3 py-1.5 text-xs hover:opacity-90 transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
                             {isLoading ? <Loader2 className='w-3.5 h-3.5 animate-spin' /> : <CheckCircle2 className='w-3.5 h-3.5' />}
                             Approve
                           </button>

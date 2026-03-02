@@ -440,4 +440,18 @@ export const adminAPI = {
       }
     );
   },
+  getDiscountCodes: async () => {
+    return adminRequest<{ success: boolean; data: any[] }>('/admin/discount-codes');
+  },
+  createDiscountCode: async (data: { code: string; discountPercent?: number }) => {
+    return adminRequest<{ success: boolean; message: string; data: any }>('/admin/discount-codes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  toggleDiscountCode: async (id: string) => {
+    return adminRequest<{ success: boolean; message: string; data: any }>(`/admin/discount-codes/${id}/toggle`, {
+      method: 'PUT',
+    });
+  },
 };

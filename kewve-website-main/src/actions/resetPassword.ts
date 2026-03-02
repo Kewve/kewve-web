@@ -42,7 +42,7 @@ export async function requestPasswordReset(email: string) {
             </p>
             <div style="text-align: center; margin: 32px 0;">
               <a href="${resetLink}" 
-                 style="display: inline-block; background-color: #1a2e23; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+                 style="display: inline-block; background-color: #ed722d; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
                 Reset Password
               </a>
             </div>

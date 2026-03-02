@@ -88,7 +88,7 @@ export default async function Home() {
             <AuthAwareLink
               hrefGuest='/export-readiness'
               hrefAuth='/dashboard'
-              className={`inline-block bg-[#153b2e] text-white px-8 py-4 rounded-lg text-base sm:text-lg hover:bg-[#1a4a3a] transition-colors ${josefinSemiBold.className}`}
+              className={`inline-block bg-brand-green text-white px-8 py-4 rounded-lg text-base sm:text-lg hover:opacity-90 transition-colors ${josefinSemiBold.className}`}
             >
               Start Your Trading Journey
             </AuthAwareLink>
@@ -232,7 +232,7 @@ export default async function Home() {
         </p>
         <Link
           href='/export-readiness'
-          className={`inline-block bg-[#153b2e] text-white px-8 py-4 rounded-lg text-base sm:text-lg hover:bg-[#1a4a3a] transition-colors ${josefinSemiBold.className}`}
+          className={`inline-block bg-brand-green text-white px-8 py-4 rounded-lg text-base sm:text-lg hover:opacity-90 transition-colors ${josefinSemiBold.className}`}
         >
           Take the Assessment
         </Link>

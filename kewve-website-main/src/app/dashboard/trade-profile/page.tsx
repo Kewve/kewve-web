@@ -33,14 +33,38 @@ const initialData: TradeProfileData = {
   companyName: '',
   country: '',
   description: '',
-  yearsOfExperience: '0',
+  yearsOfExperience: '',
   marketsPreviouslyExportedTo: '',
-  monthlyProductionCapacity: '0',
+  monthlyProductionCapacity: '',
   processingMethods: '',
   packagingFormats: '',
   storageFacilities: '',
   sustainabilityPractices: '',
   traceabilitySystems: '',
+};
+
+const requiredFieldsByTab: Record<number, { field: keyof TradeProfileData; label: string }[]> = {
+  0: [
+    { field: 'companyName', label: 'Company Name' },
+    { field: 'country', label: 'Country' },
+    { field: 'description', label: 'Description' },
+  ],
+  1: [
+    { field: 'yearsOfExperience', label: 'Years of Export Experience' },
+    { field: 'marketsPreviouslyExportedTo', label: 'Markets Previously Exported To' },
+  ],
+  2: [
+    { field: 'monthlyProductionCapacity', label: 'Monthly Production Capacity' },
+    { field: 'processingMethods', label: 'Processing Methods' },
+  ],
+  3: [
+    { field: 'packagingFormats', label: 'Packaging Formats Available' },
+    { field: 'storageFacilities', label: 'Storage Facilities' },
+  ],
+  4: [
+    { field: 'sustainabilityPractices', label: 'Sustainability Practices' },
+    { field: 'traceabilitySystems', label: 'Traceability Systems' },
+  ],
 };
 
 export default function TradeProfilePage() {
@@ -63,9 +87,12 @@ export default function TradeProfilePage() {
             companyName: d.companyName || '',
             country: d.country || '',
             description: d.description || '',
-            yearsOfExperience: String(d.yearsOfExperience ?? '0'),
+            yearsOfExperience: d.yearsOfExperience !== undefined && d.yearsOfExperience !== null ? String(d.yearsOfExperience) : '',
             marketsPreviouslyExportedTo: d.marketsPreviouslyExportedTo || '',
-            monthlyProductionCapacity: String(d.monthlyProductionCapacity ?? '0'),
+            monthlyProductionCapacity:
+              d.monthlyProductionCapacity !== undefined && d.monthlyProductionCapacity !== null
+                ? String(d.monthlyProductionCapacity)
+                : '',
             processingMethods: d.processingMethods || '',
             packagingFormats: d.packagingFormats || '',
             storageFacilities: d.storageFacilities || '',
@@ -89,7 +116,25 @@ export default function TradeProfilePage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const getMissingFieldsForTab = (tabIndex: number) => {
+    const required = requiredFieldsByTab[tabIndex] || [];
+    return required.filter(({ field }) => !String(formData[field] ?? '').trim());
+  };
+
+  const validateTabBeforeContinue = (tabIndex: number) => {
+    const missing = getMissingFieldsForTab(tabIndex);
+    if (missing.length === 0) return true;
+    toast({
+      title: 'Complete all required fields',
+      description: `Please fill: ${missing.map((m) => m.label).join(', ')}`,
+      variant: 'destructive',
+    });
+    return false;
+  };
+
   const handleNext = async () => {
+    if (!validateTabBeforeContinue(activeTab)) return;
+
     const newCompleted = new Set(Array.from(completedTabs));
     newCompleted.add(activeTab);
     setCompletedTabs(newCompleted);
@@ -116,6 +161,23 @@ export default function TradeProfilePage() {
   };
 
   const handleSaveProfile = async () => {
+    // Require current tab validity first
+    if (!validateTabBeforeContinue(activeTab)) return;
+
+    // Require all tabs to be complete before final save
+    for (let i = 0; i < tabs.length; i++) {
+      const missing = getMissingFieldsForTab(i);
+      if (missing.length > 0) {
+        setActiveTab(i);
+        toast({
+          title: 'Profile is incomplete',
+          description: `Please complete "${tabs[i]}" before saving.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
     const newCompleted = new Set(Array.from(completedTabs));
     newCompleted.add(activeTab);
     setCompletedTabs(newCompleted);
@@ -149,6 +211,7 @@ export default function TradeProfilePage() {
 
   const allCompleted = completedTabs.size === tabs.length;
   const isLastTab = activeTab === tabs.length - 1;
+  const currentTabIsValid = getMissingFieldsForTab(activeTab).length === 0;
 
   const inputClassName = `w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1a2e23]/20 focus:border-[#1a2e23] transition-colors ${josefinRegular.className}`;
   const textareaClassName = `${inputClassName} resize-y min-h-[120px]`;
@@ -189,7 +252,7 @@ export default function TradeProfilePage() {
               onClick={() => handleTabClick(index)}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm border transition-colors ${josefinRegular.className} ${
                 isActive
-                  ? 'bg-[#1a2e23] text-white border-[#1a2e23]'
+                  ? 'bg-[#ed722d] text-white border-[#ed722d]'
                   : isCompleted
                     ? 'bg-white text-gray-700 border-gray-300'
                     : 'bg-white text-gray-500 border-gray-200'
@@ -360,13 +423,14 @@ export default function TradeProfilePage() {
           <button
             onClick={handleSaveProfile}
             disabled={saving}
-            className={`px-5 py-2.5 rounded-lg text-sm bg-[#1a2e23] text-white transition-colors hover:bg-[#243d2f] disabled:opacity-60 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
+            className={`px-5 py-2.5 rounded-lg text-sm bg-[#ed722d] text-white transition-colors hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
             {saving ? 'Saving...' : 'Save Profile'}
           </button>
         ) : (
           <button
             onClick={handleNext}
-            className={`px-5 py-2.5 rounded-lg text-sm bg-[#1a2e23] text-white transition-colors hover:bg-[#243d2f] ${josefinSemiBold.className}`}>
+            disabled={!currentTabIsValid}
+            className={`px-5 py-2.5 rounded-lg text-sm bg-[#ed722d] text-white transition-colors hover:bg-[#d6a53a] disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
             Next
           </button>
         )}

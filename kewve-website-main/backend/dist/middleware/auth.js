@@ -1,10 +1,13 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
-// Ensure JWT_SECRET exists
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not set! Make sure you set it in your environment variables.");
-}
+// Get JWT_SECRET lazily to allow dotenv.config() to run first
+const getJwtSecret = () => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT_SECRET is not set! Make sure you set it in your environment variables.");
+    }
+    return secret;
+};
 export const authenticate = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace("Bearer ", "");
@@ -15,7 +18,7 @@ export const authenticate = async (req, res, next) => {
             });
             return;
         }
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, getJwtSecret());
         const user = await User.findById(decoded.userId).select("+password");
         if (!user) {
             res.status(401).json({
@@ -41,6 +44,16 @@ export const authenticate = async (req, res, next) => {
         });
     }
 };
+export const requireAdmin = async (req, res, next) => {
+    if (!req.user || req.user.role !== 'admin') {
+        res.status(403).json({
+            success: false,
+            message: "Admin access required.",
+        });
+        return;
+    }
+    next();
+};
 export const generateToken = (userId) => {
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "30d" });
+    return jwt.sign({ userId }, getJwtSecret(), { expiresIn: "30d" });
 };

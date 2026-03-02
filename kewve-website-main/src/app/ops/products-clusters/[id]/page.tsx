@@ -195,7 +195,7 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleApprove}
                   disabled={actionLoading}
-                  className={`inline-flex items-center gap-2 bg-green-600 text-white rounded-lg px-4 py-2 text-sm hover:bg-green-700 transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
+                  className={`inline-flex items-center gap-2 bg-brand-green text-white rounded-lg px-4 py-2 text-sm hover:opacity-90 transition-colors disabled:opacity-50 ${josefinSemiBold.className}`}>
                   {actionLoading ? <Loader2 className='w-4 h-4 animate-spin' /> : <CheckCircle2 className='w-4 h-4' />}
                   Approve Product
                 </button>

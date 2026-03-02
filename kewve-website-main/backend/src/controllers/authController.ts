@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import crypto from "crypto";
 import { User } from "../models/User.js";
 import { generateToken } from "../middleware/auth.js";
+import { DiscountCode } from "../models/DiscountCode.js";
 
 interface RegisterRequest extends Request {
   body: {
@@ -10,6 +11,7 @@ interface RegisterRequest extends Request {
     name: string;
     businessName?: string;
     country?: string;
+    discountCodeUsed?: string;
   };
 }
 
@@ -22,7 +24,7 @@ interface LoginRequest extends Request {
 
 export const register = async (req: RegisterRequest, res: Response): Promise<void> => {
   try {
-    const { email, password, name, businessName, country } = req.body;
+    const { email, password, name, businessName, country, discountCodeUsed } = req.body;
 
     if (!email || !password || !name) {
       res.status(400).json({
@@ -42,6 +44,18 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       return;
     }
 
+    const normalizedDiscountCode = discountCodeUsed?.toUpperCase().trim();
+    if (normalizedDiscountCode) {
+      const code = await DiscountCode.findOne({ code: normalizedDiscountCode, isActive: true });
+      if (!code) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid or inactive discount code",
+        });
+        return;
+      }
+    }
+
     // Create new user
     const user = await User.create({
       email: email.toLowerCase(),
@@ -49,7 +63,12 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       name,
       businessName,
       country,
+      discountCodeUsed: normalizedDiscountCode || undefined,
     });
+
+    if (normalizedDiscountCode) {
+      await DiscountCode.updateOne({ code: normalizedDiscountCode }, { $inc: { usageCount: 1 } });
+    }
 
     // Generate token
     const token = generateToken(user._id.toString());
@@ -64,6 +83,7 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
           name: user.name,
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
         token,
       },
@@ -124,6 +144,7 @@ export const login = async (req: LoginRequest, res: Response): Promise<void> => 
           role: user.role || 'producer',
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
         token,
       },
@@ -160,6 +181,7 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
           role: user.role || 'producer',
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
       },
     });
@@ -202,6 +224,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
           name: user.name,
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
       },
     });

@@ -14,6 +14,7 @@ interface Producer {
   readiness: 'not_started' | 'in_progress' | 'completed';
   verification: string;
   products: number;
+  discountCodeUsed?: string | null;
 }
 
 const readinessStyles: Record<string, string> = {
@@ -96,6 +97,7 @@ export default function ProducersPage() {
                 <th className="text-left py-4 px-6 font-medium">Readiness</th>
                 <th className="text-left py-4 px-6 font-medium">Verification</th>
                 <th className="text-left py-4 px-6 font-medium">Products</th>
+                <th className="text-left py-4 px-6 font-medium">Discount Code Used</th>
                 <th className="text-left py-4 px-6 font-medium">Actions</th>
               </tr>
             </thead>
@@ -120,6 +122,7 @@ export default function ProducersPage() {
                     <StatusBadge value={producer.verification} styles={verificationStyles} />
                   </td>
                   <td className="py-4 px-6">{producer.products ?? 0}</td>
+                  <td className="py-4 px-6">{producer.discountCodeUsed || '-'}</td>
                   <td className="py-4 px-6">
                     <Link
                       href={`/ops/producers/${producer.id}`}

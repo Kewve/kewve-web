@@ -4,6 +4,7 @@ import { authenticate, requireAdmin, AuthRequest } from "../middleware/auth.js";
 import { User } from "../models/User.js";
 import { Assessment } from "../models/Assessment.js";
 import { Product } from "../models/Product.js";
+import { DiscountCode } from "../models/DiscountCode.js";
 
 const router = Router();
 
@@ -99,6 +100,137 @@ router.get("/admin/me", authenticateAdmin, (req: AuthRequest, res: Response): vo
   });
 });
 
+// POST /api/discount-codes/validate - Public validation endpoint used during registration/payment
+router.post("/discount-codes/validate", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rawCode = (req.body?.code || "").toString().trim().toUpperCase();
+    if (!rawCode) {
+      res.status(400).json({ success: false, message: "Discount code is required" });
+      return;
+    }
+
+    const discountCode = await DiscountCode.findOne({ code: rawCode, isActive: true });
+    if (!discountCode) {
+      res.status(404).json({ success: false, message: "Invalid or inactive discount code" });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        code: discountCode.code,
+        discountPercent: discountCode.discountPercent,
+      },
+    });
+  } catch (error) {
+    console.error("Validate discount code error:", error);
+    res.status(500).json({ success: false, message: "Failed to validate discount code" });
+  }
+});
+
+// GET /api/pricing/assessment-tier - Public pricing tier for assessment
+router.get("/pricing/assessment-tier", async (_req: Request, res: Response): Promise<void> => {
+  try {
+    // Paid producers are created only after successful payment, so this count
+    // is a reliable proxy for paid signups.
+    const paidProducerCount = await User.countDocuments({ role: { $ne: "admin" } });
+    const nextUserNumber = paidProducerCount + 1;
+
+    let unitAmountCents = 10000;
+    let tierLabel = "standard";
+    if (nextUserNumber <= 100) {
+      unitAmountCents = 5000;
+      tierLabel = "early-bird-1";
+    } else if (nextUserNumber <= 300) {
+      unitAmountCents = 8000;
+      tierLabel = "early-bird-2";
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        unitAmountCents,
+        unitAmount: unitAmountCents / 100,
+        tierLabel,
+        paidProducerCount,
+        nextUserNumber,
+      },
+    });
+  } catch (error) {
+    console.error("Assessment tier pricing error:", error);
+    res.status(500).json({ success: false, message: "Failed to calculate assessment pricing tier" });
+  }
+});
+
+// GET /api/admin/discount-codes - Admin list of discount codes
+router.get("/admin/discount-codes", authenticateAdmin, async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const codes = await DiscountCode.find({}).sort({ createdAt: -1 }).lean();
+    res.status(200).json({ success: true, data: codes });
+  } catch (error) {
+    console.error("Admin discount codes list error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch discount codes" });
+  }
+});
+
+// POST /api/admin/discount-codes - Admin create unique code
+router.post("/admin/discount-codes", authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const rawCode = (req.body?.code || "").toString().trim().toUpperCase();
+    if (!rawCode) {
+      res.status(400).json({ success: false, message: "Code is required" });
+      return;
+    }
+
+    const existing = await DiscountCode.findOne({ code: rawCode });
+    if (existing) {
+      res.status(400).json({ success: false, message: "Discount code already exists" });
+      return;
+    }
+
+    const discountPercent =
+      typeof req.body?.discountPercent === "number" && req.body.discountPercent > 0
+        ? Math.min(100, Math.floor(req.body.discountPercent))
+        : 15;
+
+    const createdBy = ((req as any).user?.email || "admin").toString();
+    const code = await DiscountCode.create({
+      code: rawCode,
+      discountPercent,
+      isActive: true,
+      createdBy,
+    });
+
+    res.status(201).json({ success: true, message: "Discount code created", data: code });
+  } catch (error) {
+    console.error("Admin create discount code error:", error);
+    res.status(500).json({ success: false, message: "Failed to create discount code" });
+  }
+});
+
+// PUT /api/admin/discount-codes/:id/toggle - Activate/deactivate a code
+router.put("/admin/discount-codes/:id/toggle", authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const code = await DiscountCode.findById(req.params.id);
+    if (!code) {
+      res.status(404).json({ success: false, message: "Discount code not found" });
+      return;
+    }
+
+    code.isActive = !code.isActive;
+    await code.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Discount code ${code.isActive ? "activated" : "deactivated"}`,
+      data: code,
+    });
+  } catch (error) {
+    console.error("Admin toggle discount code error:", error);
+    res.status(500).json({ success: false, message: "Failed to update discount code" });
+  }
+});
+
 // GET /api/admin/producers
 router.get("/admin/producers", authenticateAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -135,6 +267,7 @@ router.get("/admin/producers", authenticateAdmin, async (req: AuthRequest, res: 
           businessName: user.businessName || "-",
           country: user.country || "-",
           email: user.email,
+          discountCodeUsed: user.discountCodeUsed || null,
           readiness: readinessStatus,
           verification: verificationStatus,
           products: productCount,

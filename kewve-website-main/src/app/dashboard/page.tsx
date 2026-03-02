@@ -44,9 +44,11 @@ function computeReadinessScore(data: any) {
   // Food Safety & Quality (25)
   let foodSafety = 0;
   const certs: string[] = data.certifications || [];
-  if (certs.includes('HACCP')) foodSafety += 4;
+  const hasHaccpCertification = yes('haccpCertification') || certs.includes('HACCP');
+  const hasIsoCertification = yes('isoCertification') || certs.includes('ISO 22000') || certs.includes('FSSC 22000');
+  if (hasHaccpCertification) foodSafety += 4;
+  if (hasIsoCertification) foodSafety += 2;
   if (certs.includes('GMP')) foodSafety += 2;
-  if (certs.includes('ISO 22000') || certs.includes('FSSC 22000')) foodSafety += 2;
   if (certs.includes('Organic')) foodSafety += 2;
   if (yes('hygieneRecords')) foodSafety += 3;
   if (yes('certificateOfAnalysis')) foodSafety += 3;
@@ -270,11 +272,11 @@ export default function DashboardPage() {
           Complete Export Readiness
         </h2>
         <p className={`text-sm text-gray-500 mb-4 ${josefinRegular.className}`}>
-          Assess your readiness to export to UK/EU markets.
+          Complete this assessment to receive your export readiness status.
         </p>
         <Link
           href='/export-readiness/assessment'
-          className={`inline-flex items-center gap-2 bg-[#1a2e23] text-white rounded-lg py-2.5 px-5 text-sm transition-all hover:bg-[#243d2f] ${josefinSemiBold.className}`}>
+          className={`inline-flex items-center gap-2 bg-[#ed722d] text-white rounded-lg py-2.5 px-5 text-sm transition-all hover:bg-[#d6a53a] ${josefinSemiBold.className}`}>
           Start Assessment
           <ArrowRight className='w-4 h-4' />
         </Link>

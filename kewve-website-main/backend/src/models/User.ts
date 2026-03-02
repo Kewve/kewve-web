@@ -8,6 +8,7 @@ export interface UserDocument extends Document {
   role: 'producer' | 'admin';
   businessName?: string;
   country?: string;
+  discountCodeUsed?: string;
   resetToken?: string;
   resetTokenExpiry?: Date;
   createdAt: Date;
@@ -48,6 +49,11 @@ const UserSchema = new Schema<UserDocument>(
     country: {
       type: String,
       trim: true,
+    },
+    discountCodeUsed: {
+      type: String,
+      trim: true,
+      uppercase: true,
     },
     resetToken: {
       type: String,

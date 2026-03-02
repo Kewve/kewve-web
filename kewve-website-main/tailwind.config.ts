@@ -17,6 +17,7 @@ const config: Config = {
       colors: {
         orange: '#ed722d',
         'muted-orange': '#ed722d', // #ed7b49
+        'brand-green': '#ed722d',
         cream: '#fafaf0',
         yellow: '#eeb944',
         'yellow-dark': '#d6a53a',
