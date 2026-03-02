@@ -15,6 +15,7 @@ export default function OpsSettingsPage() {
   const [codesLoading, setCodesLoading] = useState(true);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
   const [newCode, setNewCode] = useState('');
   const [discountCodes, setDiscountCodes] = useState<any[]>([]);
 
@@ -25,6 +26,26 @@ export default function OpsSettingsPage() {
       setLastName(parts.slice(1).join(' ') || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    const loadAdminProfile = async () => {
+      try {
+        const res = await adminAPI.getMe();
+        if (res.success && res.data?.user) {
+          setAdminEmail(res.data.user.email || '');
+          if (!user?.name && res.data.user.name) {
+            const parts = String(res.data.user.name).split(' ');
+            setFirstName(parts[0] || '');
+            setLastName(parts.slice(1).join(' ') || '');
+          }
+        }
+      } catch {
+        setAdminEmail('');
+      }
+    };
+
+    loadAdminProfile();
+  }, [user?.name]);
 
   const loadDiscountCodes = async () => {
     setCodesLoading(true);
@@ -120,7 +141,7 @@ export default function OpsSettingsPage() {
               <label className={`block text-sm text-gray-700 mb-1.5 ${josefinRegular.className}`}>Email</label>
               <input
                 type='email'
-                value={user?.email || ''}
+                value={adminEmail || user?.email || ''}
                 disabled
                 className={`w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-400 bg-gray-50 cursor-not-allowed ${josefinRegular.className}`}
               />

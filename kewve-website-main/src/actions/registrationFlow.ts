@@ -2,7 +2,7 @@
 
 import crypto from 'crypto';
 import { sendEmail } from '@/utils/emailConfig';
-import { createCheckoutSession } from '@/actions/createCheckout';
+import { createCheckoutSession, getCheckoutPricingPreview } from '@/actions/createCheckout';
 
 interface RegistrationData {
   name: string;
@@ -192,8 +192,18 @@ export async function validateRegistrationConfirmationToken(token: string) {
     data: {
       email: verified.payload.email,
       name: verified.payload.name,
+      discountCode: verified.payload.discountCode || '',
     },
   };
+}
+
+export async function getCheckoutPricingPreviewFromConfirmationToken(token: string) {
+  const verified = verifyRegistrationToken(token);
+  if (!verified.valid) {
+    return { success: false, error: verified.error };
+  }
+
+  return getCheckoutPricingPreview(verified.payload.discountCode);
 }
 
 export async function createCheckoutFromConfirmationToken(token: string) {

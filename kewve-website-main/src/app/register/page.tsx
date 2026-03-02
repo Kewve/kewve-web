@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
 import Header from '@/components/Header';
@@ -9,17 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { requestRegistrationEmailConfirmation } from '@/actions/registrationFlow';
-import { getCheckoutPricingPreview } from '@/actions/createCheckout';
-
-interface PricingPreviewData {
-  standardAmountCents: number;
-  baseAmountBeforeDiscount: number;
-  finalAmount: number;
-  totalDiscountAmount: number;
-  earlyBirdDiscountAmount: number;
-  promoDiscountAmount: number;
-  pricingTier: string;
-}
 
 const TRADING_PLATFORM_TNC = `Terms and conditions for the Kewve Trading Platform
 Kewve Ltd (Kewve) of Church Field Close, Mulhuddart. D15 KC9E. Ireland.
@@ -150,33 +139,9 @@ export default function RegisterPage() {
   const [confirmationSent, setConfirmationSent] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [checkingEmail, setCheckingEmail] = useState(false);
-  const [pricingPreview, setPricingPreview] = useState<PricingPreviewData | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState('');
   const [acceptedTnc, setAcceptedTnc] = useState(false);
+  const [tncExpanded, setTncExpanded] = useState(false);
   const { toast } = useToast();
-
-  const formatEuro = (cents: number) => `€${(cents / 100).toFixed(2)}`;
-
-  const loadPricingPreview = async (discountCode?: string) => {
-    setPreviewLoading(true);
-    const result = await getCheckoutPricingPreview(discountCode);
-    if (result.success && result.data) {
-      setPricingPreview(result.data as PricingPreviewData);
-      setPreviewError('');
-    } else {
-      setPreviewError(result.error || 'Unable to load price preview.');
-    }
-    setPreviewLoading(false);
-  };
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      loadPricingPreview(formData.discountCode);
-    }, 350);
-    return () => clearTimeout(timeoutId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.discountCode]);
 
   const checkEmailExists = async (email: string) => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
@@ -268,6 +233,7 @@ export default function RegisterPage() {
       });
       setEmailError('');
       setAcceptedTnc(false);
+      setTncExpanded(false);
       toast({
         title: 'Check your email',
         description: 'Please confirm your email address first. Payment starts only after confirmation.',
@@ -386,34 +352,6 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className='rounded-md border border-gray-200 bg-gray-50 px-4 py-3'>
-                <p className={`text-sm text-black mb-2 ${josefinSemiBold.className}`}>Price preview</p>
-                {previewLoading || !pricingPreview ? (
-                  <p className={`text-xs text-black/70 ${josefinRegular.className}`}>Calculating...</p>
-                ) : (
-                  <div className={`space-y-1 text-xs text-black/80 ${josefinRegular.className}`}>
-                    <p>Base fee: {formatEuro(pricingPreview.standardAmountCents)}</p>
-                    <p>
-                      Early-bird discount:{' '}
-                      {pricingPreview.earlyBirdDiscountAmount > 0
-                        ? `-${formatEuro(pricingPreview.earlyBirdDiscountAmount)}`
-                        : '€0.00'}
-                    </p>
-                    <p>Price after early-bird: {formatEuro(pricingPreview.baseAmountBeforeDiscount)}</p>
-                    <p>
-                      Discount code:{' '}
-                      {pricingPreview.promoDiscountAmount > 0 ? `-${formatEuro(pricingPreview.promoDiscountAmount)}` : '€0.00'}
-                    </p>
-                    <p className={`text-sm text-black ${josefinSemiBold.className}`}>
-                      Total payable: {formatEuro(pricingPreview.finalAmount)}
-                    </p>
-                  </div>
-                )}
-                {previewError && formData.discountCode.trim() && (
-                  <p className={`text-xs text-red-600 mt-2 ${josefinRegular.className}`}>{previewError}</p>
-                )}
-              </div>
-
               <div>
                 <Label htmlFor='password' className={`text-black mb-2 block ${josefinRegular.className}`}>
                   Password *
@@ -459,14 +397,20 @@ export default function RegisterPage() {
               </div>
 
               <div className='rounded-md border border-gray-300 bg-white'>
-                <div className='px-4 py-3 border-b border-gray-200'>
+                <button
+                  type='button'
+                  onClick={() => setTncExpanded((prev) => !prev)}
+                  className='w-full px-4 py-3 border-b border-gray-200 flex items-center justify-between text-left'>
                   <p className={`text-sm text-black ${josefinSemiBold.className}`}>Terms and Conditions for the Kewve Trading Platform</p>
-                </div>
-                <div className='max-h-64 overflow-y-auto px-4 py-3'>
-                  <pre className={`whitespace-pre-wrap text-xs text-black/80 leading-relaxed ${josefinRegular.className}`}>
-                    {TRADING_PLATFORM_TNC}
-                  </pre>
-                </div>
+                  <span className={`text-sm text-black transition-transform ${tncExpanded ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {tncExpanded && (
+                  <div className='max-h-64 overflow-y-auto px-4 py-3'>
+                    <pre className={`whitespace-pre-wrap text-xs text-black/80 leading-relaxed ${josefinRegular.className}`}>
+                      {TRADING_PLATFORM_TNC}
+                    </pre>
+                  </div>
+                )}
               </div>
 
               <label className='flex items-start gap-3 cursor-pointer'>

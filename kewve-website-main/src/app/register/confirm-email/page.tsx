@@ -9,10 +9,18 @@ import Footer from '@/components/Footer';
 import { josefinRegular, josefinSemiBold, titleFont } from '@/utils';
 import {
   createCheckoutFromConfirmationToken,
+  getCheckoutPricingPreviewFromConfirmationToken,
   validateRegistrationConfirmationToken,
 } from '@/actions/registrationFlow';
 
 type Status = 'validating' | 'ready' | 'processing_payment' | 'error';
+interface PricingPreviewData {
+  standardAmountCents: number;
+  baseAmountBeforeDiscount: number;
+  finalAmount: number;
+  earlyBirdDiscountAmount: number;
+  promoDiscountAmount: number;
+}
 
 function ConfirmEmailContent() {
   const searchParams = useSearchParams();
@@ -20,6 +28,9 @@ function ConfirmEmailContent() {
   const [token, setToken] = useState('');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
+  const [pricingPreview, setPricingPreview] = useState<PricingPreviewData | null>(null);
+
+  const formatEuro = (cents: number) => `€${(cents / 100).toFixed(2)}`;
 
   useEffect(() => {
     const queryToken = searchParams.get('token') || '';
@@ -32,14 +43,20 @@ function ConfirmEmailContent() {
     }
 
     const validate = async () => {
-      const result = await validateRegistrationConfirmationToken(queryToken);
-      if (!result.success) {
+      const [validationResult, previewResult] = await Promise.all([
+        validateRegistrationConfirmationToken(queryToken),
+        getCheckoutPricingPreviewFromConfirmationToken(queryToken),
+      ]);
+      if (!validationResult.success) {
         setStatus('error');
-        setMessage(result.error || 'Invalid confirmation link.');
+        setMessage(validationResult.error || 'Invalid confirmation link.');
         return;
       }
 
-      setEmail(result.data?.email || '');
+      setEmail(validationResult.data?.email || '');
+      if (previewResult.success && previewResult.data) {
+        setPricingPreview(previewResult.data as PricingPreviewData);
+      }
       setStatus('ready');
     };
 
@@ -90,6 +107,28 @@ function ConfirmEmailContent() {
                     If products contain animal or seafood ingredients, they are not eligible for Kewve.
                   </p>
                 </div>
+
+                {pricingPreview && (
+                  <div className='rounded-md border border-gray-200 bg-gray-50 px-4 py-3 mb-5 text-left'>
+                    <p className={`text-sm text-black mb-2 ${josefinSemiBold.className}`}>Price preview</p>
+                    <div className={`space-y-1 text-xs text-black/80 ${josefinRegular.className}`}>
+                      <p>Base fee: {formatEuro(pricingPreview.standardAmountCents)}</p>
+                      <p>
+                        Early-bird discount:{' '}
+                        {pricingPreview.earlyBirdDiscountAmount > 0
+                          ? `-${formatEuro(pricingPreview.earlyBirdDiscountAmount)}`
+                          : '€0.00'}
+                      </p>
+                      <p>
+                        Discount code discount:{' '}
+                        {pricingPreview.promoDiscountAmount > 0 ? `-${formatEuro(pricingPreview.promoDiscountAmount)}` : '€0.00'}
+                      </p>
+                      <p className={`text-sm text-black ${josefinSemiBold.className}`}>
+                        Total payable: {formatEuro(pricingPreview.finalAmount)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   onClick={handleProceedToPayment}
