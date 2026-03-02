@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
@@ -14,7 +14,7 @@ import {
 
 type Status = 'validating' | 'ready' | 'processing_payment' | 'error';
 
-export default function ConfirmEmailPage() {
+function ConfirmEmailContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>('validating');
   const [token, setToken] = useState('');
@@ -126,6 +126,30 @@ export default function ConfirmEmailPage() {
         <Footer />
       </section>
     </div>
+  );
+}
+
+export default function ConfirmEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='overflow-x-hidden min-h-screen flex flex-col'>
+          <Header />
+          <div className='flex-grow bg-gradient-to-br from-orange via-yellow to-orange flex items-center justify-center pt-24 lg:pt-32 pb-16 px-4'>
+            <div className='w-full max-w-md'>
+              <div className='bg-white rounded-lg shadow-lg p-8 text-center'>
+                <Loader2 className='w-12 h-12 text-orange mx-auto mb-4 animate-spin' />
+                <p className={`text-sm text-black/70 ${josefinRegular.className}`}>Loading...</p>
+              </div>
+            </div>
+          </div>
+          <section className='bg-orange relative pb-10'>
+            <Footer />
+          </section>
+        </div>
+      }>
+      <ConfirmEmailContent />
+    </Suspense>
   );
 }
 
