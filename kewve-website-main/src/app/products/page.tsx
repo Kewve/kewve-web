@@ -75,7 +75,7 @@ export default async function Products({ searchParams }: any) {
           </p>
         </div>
       </section>
-      <section className='bg-cream'>
+      <section className='bg-cream -mt-[2px] -mb-[2px] overflow-hidden leading-none'>
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'>
           <path
             fill='#ed722d'
@@ -167,7 +167,7 @@ export default async function Products({ searchParams }: any) {
           </div>
         </div>
       </section>
-      <section className='bg-orange'>
+      <section className='bg-orange -mb-[2px] overflow-hidden leading-none'>
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200'>
           <path
             fill='#fafaf0'

@@ -1,0 +1,553 @@
+import { Router } from "express";
+import jwt from "jsonwebtoken";
+import { User } from "../models/User.js";
+import { Assessment } from "../models/Assessment.js";
+import { Product } from "../models/Product.js";
+import { DiscountCode } from "../models/DiscountCode.js";
+const router = Router();
+// POST /api/admin/login - Admin login using .env credentials
+router.post("/admin/login", (req, res) => {
+    const { email, password } = req.body;
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+        res.status(500).json({ success: false, message: "Admin credentials not configured" });
+        return;
+    }
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+        res.status(401).json({ success: false, message: "Invalid admin credentials" });
+        return;
+    }
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        res.status(500).json({ success: false, message: "JWT_SECRET not set" });
+        return;
+    }
+    const token = jwt.sign({ adminEmail: ADMIN_EMAIL, role: "admin" }, secret, { expiresIn: "30d" });
+    res.json({
+        success: true,
+        message: "Admin login successful",
+        data: {
+            user: {
+                id: "admin",
+                email: ADMIN_EMAIL,
+                name: "Admin",
+                role: "admin",
+            },
+            token,
+        },
+    });
+});
+// Admin auth middleware that also accepts admin JWT tokens
+export const authenticateAdmin = async (req, res, next) => {
+    try {
+        const tokenStr = req.headers.authorization?.replace("Bearer ", "");
+        if (!tokenStr) {
+            res.status(401).json({ success: false, message: "Authentication required" });
+            return;
+        }
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            res.status(500).json({ success: false, message: "JWT_SECRET not set" });
+            return;
+        }
+        const decoded = jwt.verify(tokenStr, secret);
+        // Admin token (from admin login)
+        if (decoded.role === "admin" && decoded.adminEmail) {
+            req.user = { role: "admin", email: decoded.adminEmail, name: "Admin" };
+            next();
+            return;
+        }
+        // Regular user token - check if they're an admin in DB
+        if (decoded.userId) {
+            const user = await User.findById(decoded.userId);
+            if (user && user.role === "admin") {
+                req.user = user;
+                next();
+                return;
+            }
+        }
+        res.status(403).json({ success: false, message: "Admin access required" });
+    }
+    catch {
+        res.status(401).json({ success: false, message: "Invalid token" });
+    }
+};
+// GET /api/admin/me - Get admin user info
+router.get("/admin/me", authenticateAdmin, (req, res) => {
+    const user = req.user;
+    res.json({
+        success: true,
+        data: {
+            user: {
+                id: "admin",
+                email: user.email,
+                name: user.name || "Admin",
+                role: "admin",
+            },
+        },
+    });
+});
+// POST /api/discount-codes/validate - Public validation endpoint used during registration/payment
+router.post("/discount-codes/validate", async (req, res) => {
+    try {
+        const rawCode = (req.body?.code || "").toString().trim().toUpperCase();
+        if (!rawCode) {
+            res.status(400).json({ success: false, message: "Discount code is required" });
+            return;
+        }
+        const discountCode = await DiscountCode.findOne({ code: rawCode, isActive: true });
+        if (!discountCode) {
+            res.status(404).json({ success: false, message: "Invalid or inactive discount code" });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            data: {
+                code: discountCode.code,
+                discountPercent: discountCode.discountPercent,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Validate discount code error:", error);
+        res.status(500).json({ success: false, message: "Failed to validate discount code" });
+    }
+});
+// GET /api/pricing/assessment-tier - Public pricing tier for assessment
+router.get("/pricing/assessment-tier", async (_req, res) => {
+    try {
+        // Paid producers are created only after successful payment, so this count
+        // is a reliable proxy for paid signups.
+        const paidProducerCount = await User.countDocuments({ role: { $ne: "admin" } });
+        const nextUserNumber = paidProducerCount + 1;
+        let unitAmountCents = 10000;
+        let tierLabel = "standard";
+        if (nextUserNumber <= 100) {
+            unitAmountCents = 5000;
+            tierLabel = "early-bird-1";
+        }
+        else if (nextUserNumber <= 300) {
+            unitAmountCents = 8000;
+            tierLabel = "early-bird-2";
+        }
+        res.status(200).json({
+            success: true,
+            data: {
+                unitAmountCents,
+                unitAmount: unitAmountCents / 100,
+                tierLabel,
+                paidProducerCount,
+                nextUserNumber,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Assessment tier pricing error:", error);
+        res.status(500).json({ success: false, message: "Failed to calculate assessment pricing tier" });
+    }
+});
+// GET /api/admin/discount-codes - Admin list of discount codes
+router.get("/admin/discount-codes", authenticateAdmin, async (_req, res) => {
+    try {
+        const codes = await DiscountCode.find({}).sort({ createdAt: -1 }).lean();
+        res.status(200).json({ success: true, data: codes });
+    }
+    catch (error) {
+        console.error("Admin discount codes list error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch discount codes" });
+    }
+});
+// POST /api/admin/discount-codes - Admin create unique code
+router.post("/admin/discount-codes", authenticateAdmin, async (req, res) => {
+    try {
+        const rawCode = (req.body?.code || "").toString().trim().toUpperCase();
+        if (!rawCode) {
+            res.status(400).json({ success: false, message: "Code is required" });
+            return;
+        }
+        const existing = await DiscountCode.findOne({ code: rawCode });
+        if (existing) {
+            res.status(400).json({ success: false, message: "Discount code already exists" });
+            return;
+        }
+        const discountPercent = typeof req.body?.discountPercent === "number" && req.body.discountPercent > 0
+            ? Math.min(100, Math.floor(req.body.discountPercent))
+            : 15;
+        const createdBy = (req.user?.email || "admin").toString();
+        const code = await DiscountCode.create({
+            code: rawCode,
+            discountPercent,
+            isActive: true,
+            createdBy,
+        });
+        res.status(201).json({ success: true, message: "Discount code created", data: code });
+    }
+    catch (error) {
+        console.error("Admin create discount code error:", error);
+        res.status(500).json({ success: false, message: "Failed to create discount code" });
+    }
+});
+// PUT /api/admin/discount-codes/:id/toggle - Activate/deactivate a code
+router.put("/admin/discount-codes/:id/toggle", authenticateAdmin, async (req, res) => {
+    try {
+        const code = await DiscountCode.findById(req.params.id);
+        if (!code) {
+            res.status(404).json({ success: false, message: "Discount code not found" });
+            return;
+        }
+        code.isActive = !code.isActive;
+        await code.save();
+        res.status(200).json({
+            success: true,
+            message: `Discount code ${code.isActive ? "activated" : "deactivated"}`,
+            data: code,
+        });
+    }
+    catch (error) {
+        console.error("Admin toggle discount code error:", error);
+        res.status(500).json({ success: false, message: "Failed to update discount code" });
+    }
+});
+// GET /api/admin/producers
+router.get("/admin/producers", authenticateAdmin, async (req, res) => {
+    try {
+        const producers = await User.find({ role: { $ne: "admin" } }).select("-password").sort({ createdAt: -1 });
+        const producerData = await Promise.all(producers.map(async (user) => {
+            const assessment = await Assessment.findOne({ userId: user._id }).select("-documents.data");
+            const productCount = await Product.countDocuments({ userId: user._id });
+            let readinessStatus = "not_started";
+            if (assessment) {
+                const hasAnswers = assessment.get("country") || assessment.get("businessRegistered") || assessment.get("haccpProcess");
+                if (hasAnswers)
+                    readinessStatus = "in_progress";
+                if (assessment.get("confirmAccuracy") === "yes" && assessment.get("agreeCompliance") === "yes")
+                    readinessStatus = "completed";
+            }
+            let verificationStatus = "pending";
+            if (assessment && assessment.verified) {
+                verificationStatus = "verified";
+            }
+            else if (assessment && assessment.documents && assessment.documents.length > 0) {
+                const allApproved = assessment.documents.every((d) => d.status === "approved");
+                const someApproved = assessment.documents.some((d) => d.status === "approved");
+                const someRejected = assessment.documents.some((d) => d.status === "rejected");
+                if (allApproved)
+                    verificationStatus = "all_approved";
+                else if (someRejected)
+                    verificationStatus = "action_needed";
+                else if (someApproved)
+                    verificationStatus = "in_review";
+                else
+                    verificationStatus = "submitted";
+            }
+            return {
+                id: user._id,
+                name: user.name,
+                businessName: user.businessName || "-",
+                country: user.country || "-",
+                email: user.email,
+                discountCodeUsed: user.discountCodeUsed || null,
+                readiness: readinessStatus,
+                verification: verificationStatus,
+                products: productCount,
+                createdAt: user.createdAt,
+            };
+        }));
+        res.status(200).json({ success: true, data: producerData });
+    }
+    catch (error) {
+        console.error("Admin producers error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch producers" });
+    }
+});
+// GET /api/admin/stats
+router.get("/admin/stats", authenticateAdmin, async (req, res) => {
+    try {
+        const totalProducers = await User.countDocuments({ role: { $ne: "admin" } });
+        const verifiedProducers = await Assessment.countDocuments({ verified: true });
+        const totalProducts = await Product.countDocuments({});
+        const totalAssessments = await Assessment.countDocuments({});
+        // Count documents pending review across all assessments
+        const assessments = await Assessment.find({}).select("documents");
+        let pendingDocs = 0;
+        let totalDocs = 0;
+        let approvedDocs = 0;
+        let rejectedDocs = 0;
+        assessments.forEach((a) => {
+            if (a.documents) {
+                a.documents.forEach((d) => {
+                    totalDocs++;
+                    if (d.status === "pending")
+                        pendingDocs++;
+                    else if (d.status === "approved")
+                        approvedDocs++;
+                    else if (d.status === "rejected")
+                        rejectedDocs++;
+                });
+            }
+        });
+        res.status(200).json({
+            success: true,
+            data: {
+                totalProducers,
+                verifiedProducers,
+                totalProducts,
+                totalAssessments,
+                pendingDocs,
+                totalDocs,
+                approvedDocs,
+                rejectedDocs,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Admin stats error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch stats" });
+    }
+});
+// GET /api/admin/producer/:id
+router.get("/admin/producer/:id", authenticateAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select("-password");
+        if (!user) {
+            res.status(404).json({ success: false, message: "Producer not found" });
+            return;
+        }
+        const assessment = await Assessment.findOne({ userId: user._id }).select("-documents.data");
+        const products = await Product.find({ userId: user._id }).select("-image.data");
+        res.status(200).json({
+            success: true,
+            data: { user, assessment, products },
+        });
+    }
+    catch (error) {
+        console.error("Admin producer detail error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch producer" });
+    }
+});
+// GET /api/admin/producer/:id/document/:docId - View/download a producer's document
+// Also accepts ?token=... as a query param for opening in new tab
+router.get("/admin/producer/:id/document/:docId", async (req, res, next) => {
+    // Allow token from query string for direct browser viewing
+    if (!req.headers.authorization && req.query.token) {
+        req.headers.authorization = `Bearer ${req.query.token}`;
+    }
+    authenticateAdmin(req, res, next);
+}, async (req, res) => {
+    try {
+        const assessment = await Assessment.findOne({ userId: req.params.id });
+        if (!assessment) {
+            res.status(404).json({ success: false, message: "Assessment not found" });
+            return;
+        }
+        const doc = assessment.documents?.find((d) => d._id?.toString() === req.params.docId);
+        if (!doc) {
+            res.status(404).json({ success: false, message: "Document not found" });
+            return;
+        }
+        res.setHeader("Content-Type", doc.type);
+        res.setHeader("Content-Disposition", `inline; filename="${doc.name}"`);
+        if (doc.size)
+            res.setHeader("Content-Length", doc.size);
+        res.send(doc.data);
+    }
+    catch (error) {
+        console.error("Admin view document error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch document" });
+    }
+});
+// PUT /api/admin/producer/:id/document/:docId/review - Approve or reject a document
+router.put("/admin/producer/:id/document/:docId/review", authenticateAdmin, async (req, res) => {
+    try {
+        const { action, reason } = req.body;
+        if (!action || !["approved", "rejected"].includes(action)) {
+            res.status(400).json({ success: false, message: "Action must be 'approved' or 'rejected'" });
+            return;
+        }
+        if (action === "rejected" && !reason) {
+            res.status(400).json({ success: false, message: "Rejection reason is required" });
+            return;
+        }
+        const assessment = await Assessment.findOne({ userId: req.params.id });
+        if (!assessment) {
+            res.status(404).json({ success: false, message: "Assessment not found" });
+            return;
+        }
+        const doc = assessment.documents?.find((d) => d._id?.toString() === req.params.docId);
+        if (!doc) {
+            res.status(404).json({ success: false, message: "Document not found" });
+            return;
+        }
+        doc.status = action;
+        if (action === "rejected") {
+            doc.rejectionReason = reason;
+        }
+        else {
+            doc.rejectionReason = undefined;
+        }
+        doc.reviewedAt = new Date();
+        await assessment.save();
+        res.status(200).json({
+            success: true,
+            message: `Document ${action}`,
+            data: {
+                documentId: req.params.docId,
+                status: action,
+                reason: action === "rejected" ? reason : undefined,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Admin review document error:", error);
+        res.status(500).json({ success: false, message: "Failed to review document" });
+    }
+});
+// PUT /api/admin/producer/:id/verify - Mark producer as verified (all docs must be approved)
+router.put("/admin/producer/:id/verify", authenticateAdmin, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(404).json({ success: false, message: "Producer not found" });
+            return;
+        }
+        const assessment = await Assessment.findOne({ userId: user._id });
+        if (!assessment || !assessment.documents || assessment.documents.length === 0) {
+            res.status(400).json({ success: false, message: "No documents found for this producer" });
+            return;
+        }
+        const allApproved = assessment.documents.every((d) => d.status === "approved");
+        if (!allApproved) {
+            res.status(400).json({ success: false, message: "All documents must be approved before verifying a producer" });
+            return;
+        }
+        // Set a verified flag on the assessment
+        assessment.verified = true;
+        assessment.verifiedAt = new Date();
+        assessment.verifiedBy = req.user.email;
+        await assessment.save();
+        res.status(200).json({
+            success: true,
+            message: "Producer marked as verified",
+        });
+    }
+    catch (error) {
+        console.error("Admin verify producer error:", error);
+        res.status(500).json({ success: false, message: "Failed to verify producer" });
+    }
+});
+// ─── Product Review Endpoints ───────────────────────────────────────────────
+// GET /api/admin/products - List all products across all producers
+router.get("/admin/products", authenticateAdmin, async (req, res) => {
+    try {
+        const products = await Product.find({}).select("-image").sort({ createdAt: -1 }).lean();
+        // Get producer info for each product
+        const userIds = Array.from(new Set(products.map((p) => p.userId.toString())));
+        const users = await User.find({ _id: { $in: userIds } }).select("name email businessName").lean();
+        const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+        // Check which products have images
+        const productIds = products.map((p) => p._id);
+        const withImages = await Product.find({ _id: { $in: productIds }, "image.contentType": { $exists: true, $ne: null } }).select("_id").lean();
+        const imageSet = new Set(withImages.map((p) => p._id.toString()));
+        const data = products.map((p) => {
+            const producer = userMap.get(p.userId.toString());
+            return {
+                ...p,
+                hasImage: imageSet.has(p._id.toString()),
+                producer: producer
+                    ? { name: producer.name, email: producer.email, businessName: producer.businessName }
+                    : null,
+            };
+        });
+        res.status(200).json({ success: true, data });
+    }
+    catch (error) {
+        console.error("Admin products error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch products" });
+    }
+});
+// GET /api/admin/products/:id - Get full product detail
+router.get("/admin/products/:id", authenticateAdmin, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id).select("-image").lean();
+        if (!product) {
+            res.status(404).json({ success: false, message: "Product not found" });
+            return;
+        }
+        const producer = await User.findById(product.userId).select("name email businessName country").lean();
+        // Check if has image
+        const hasImage = await Product.exists({
+            _id: req.params.id,
+            "image.contentType": { $exists: true, $ne: null },
+        });
+        res.status(200).json({
+            success: true,
+            data: {
+                ...product,
+                hasImage: !!hasImage,
+                producer: producer || null,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Admin product detail error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch product" });
+    }
+});
+// GET /api/admin/products/:id/image - Serve product image to admin
+router.get("/admin/products/:id/image", async (req, res, next) => {
+    if (!req.headers.authorization && req.query.token) {
+        req.headers.authorization = `Bearer ${req.query.token}`;
+    }
+    authenticateAdmin(req, res, next);
+}, async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product || !product.image || !product.image.data) {
+            res.status(404).json({ success: false, message: "Image not found" });
+            return;
+        }
+        res.set("Content-Type", product.image.contentType);
+        res.set("Cache-Control", "private, max-age=3600");
+        res.send(product.image.data);
+    }
+    catch (error) {
+        console.error("Admin product image error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch image" });
+    }
+});
+// PUT /api/admin/products/:id/review - Approve or reject a product
+router.put("/admin/products/:id/review", authenticateAdmin, async (req, res) => {
+    try {
+        const { action, reason } = req.body;
+        if (!action || !["approved", "rejected"].includes(action)) {
+            res.status(400).json({ success: false, message: "Action must be 'approved' or 'rejected'" });
+            return;
+        }
+        if (action === "rejected" && !reason) {
+            res.status(400).json({ success: false, message: "Rejection reason is required" });
+            return;
+        }
+        const update = {
+            verification: action === "approved" ? "verified" : "rejected",
+        };
+        if (action === "approved") {
+            update.readiness = "approved";
+        }
+        const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true }).select("-image");
+        if (!product) {
+            res.status(404).json({ success: false, message: "Product not found" });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            message: `Product ${action}`,
+            data: product,
+        });
+    }
+    catch (error) {
+        console.error("Admin review product error:", error);
+        res.status(500).json({ success: false, message: "Failed to review product" });
+    }
+});
+export default router;

@@ -44,7 +44,10 @@ function Header({ needsBackground = false }: HeaderProps) {
           </Link>
           <Link prefetch href='/' className='relative flex items-center justify-center shrink-0 mx-4 xl:mx-8'>
             <Image src='/logo-color.png' width={200} height={32} alt='Kewve logo' className='relative z-50 h-8 w-auto' />
-            <div className='absolute left-1/2 -translate-x-1/2 -top-[110px] rounded-full bg-white h-48 w-52 z-0'></div>
+            <div
+              className={`absolute left-1/2 -translate-x-1/2 -top-[110px] rounded-full h-48 w-52 z-0 ${
+                needsBackground ? 'bg-[#faf8f5]' : 'bg-white'
+              }`}></div>
           </Link>
           <Link prefetch href='/blog' className={headerLinkClassName}>
             Blog
@@ -52,11 +55,16 @@ function Header({ needsBackground = false }: HeaderProps) {
           {!loading && (
             <>
               {isAuthenticated ? (
-                <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer hover:text-orange transition-colors relative z-10`}>
-                  Logout
-                </button>
+                <>
+                  <Link prefetch href='/dashboard' className={`${headerLinkClassName} hover:text-orange transition-colors relative z-10`}>
+                    Dashboard
+                  </Link>
+                  <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer border border-white/50 px-4 py-2 rounded hover:bg-white/10 transition-colors relative z-10`}>
+                    Logout
+                  </button>
+                </>
               ) : (
-                <Link prefetch href='/coming-soon' className={`${headerLinkClassName} bg-[#153b2e] px-4 py-2 rounded hover:bg-[#1a4a3a] transition-colors relative z-10`}>
+                <Link prefetch href='/login' className={`${headerLinkClassName} bg-brand-green px-4 py-2 rounded hover:opacity-90 transition-colors relative z-10`}>
                   Sign In
                 </Link>
               )}
@@ -66,7 +74,10 @@ function Header({ needsBackground = false }: HeaderProps) {
         <div className='flex relative z-50 overflow-visible lg:hidden justify-between items-center bg-orange py-4 px-4'>
           <Link prefetch href='/' className='relative flex items-center shrink-0'>
             <Image src='/logo-color.png' width={200} height={28} alt='Kewve logo' className='relative z-50 h-7 w-auto' />
-            <div className='absolute left-1/2 -translate-x-1/2 -top-[100px] rounded-full bg-white h-48 w-48 z-10'></div>
+            <div
+              className={`absolute left-1/2 -translate-x-1/2 -top-[100px] rounded-full h-48 w-48 z-10 ${
+                needsBackground ? 'bg-[#faf8f5]' : 'bg-white'
+              }`}></div>
           </Link>
           <Menu className='text-white cursor-pointer h-8 w-auto' onClick={() => setMobileMenuOpen(true)} />
         </div>
@@ -86,11 +97,16 @@ function Header({ needsBackground = false }: HeaderProps) {
             {!loading && (
               <>
                 {isAuthenticated ? (
-                  <button onClick={handleLogout} className={headerMobileClassName}>
-                    Logout
-                  </button>
+                  <>
+                    <button onClick={handleRouteChange('/dashboard')} className={headerMobileClassName}>
+                      Dashboard
+                    </button>
+                    <button onClick={handleLogout} className={headerMobileClassName}>
+                      Logout
+                    </button>
+                  </>
                 ) : (
-                  <button onClick={handleRouteChange('/coming-soon')} className={headerMobileClassName}>
+                  <button onClick={handleRouteChange('/login')} className={headerMobileClassName}>
                     Sign In
                   </button>
                 )}

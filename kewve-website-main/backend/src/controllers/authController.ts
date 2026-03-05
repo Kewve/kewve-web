@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import { User } from "../models/User.js";
 import { generateToken } from "../middleware/auth.js";
+import { DiscountCode } from "../models/DiscountCode.js";
 
 interface RegisterRequest extends Request {
   body: {
@@ -9,6 +11,7 @@ interface RegisterRequest extends Request {
     name: string;
     businessName?: string;
     country?: string;
+    discountCodeUsed?: string;
   };
 }
 
@@ -21,7 +24,7 @@ interface LoginRequest extends Request {
 
 export const register = async (req: RegisterRequest, res: Response): Promise<void> => {
   try {
-    const { email, password, name, businessName, country } = req.body;
+    const { email, password, name, businessName, country, discountCodeUsed } = req.body;
 
     if (!email || !password || !name) {
       res.status(400).json({
@@ -41,6 +44,18 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       return;
     }
 
+    const normalizedDiscountCode = discountCodeUsed?.toUpperCase().trim();
+    if (normalizedDiscountCode) {
+      const code = await DiscountCode.findOne({ code: normalizedDiscountCode, isActive: true });
+      if (!code) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid or inactive discount code",
+        });
+        return;
+      }
+    }
+
     // Create new user
     const user = await User.create({
       email: email.toLowerCase(),
@@ -48,7 +63,12 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       name,
       businessName,
       country,
+      discountCodeUsed: normalizedDiscountCode || undefined,
     });
+
+    if (normalizedDiscountCode) {
+      await DiscountCode.updateOne({ code: normalizedDiscountCode }, { $inc: { usageCount: 1 } });
+    }
 
     // Generate token
     const token = generateToken(user._id.toString());
@@ -63,6 +83,7 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
           name: user.name,
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
         token,
       },
@@ -120,8 +141,10 @@ export const login = async (req: LoginRequest, res: Response): Promise<void> => 
           id: user._id,
           email: user.email,
           name: user.name,
+          role: user.role || 'producer',
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
         token,
       },
@@ -155,8 +178,10 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
           id: user._id,
           email: user.email,
           name: user.name,
+          role: user.role || 'producer',
           businessName: user.businessName,
           country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
         },
       },
     });
@@ -165,6 +190,133 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       message: "Failed to get user information",
+    });
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authReq = req as any;
+    const user = authReq.user;
+
+    if (!user) {
+      res.status(401).json({ success: false, message: "User not authenticated" });
+      return;
+    }
+
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      res.status(400).json({ success: false, message: "Name is required" });
+      return;
+    }
+
+    user.name = name.trim();
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          businessName: user.businessName,
+          country: user.country,
+          discountCodeUsed: user.discountCodeUsed,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ success: false, message: "Failed to update profile" });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ success: false, message: "Email is required" });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Don't reveal whether user exists
+      res.status(200).json({
+        success: true,
+        message: "If an account with that email exists, a reset link has been sent.",
+      });
+      return;
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({
+      success: true,
+      message: "If an account with that email exists, a reset link has been sent.",
+      data: { resetToken, email: user.email, name: user.name },
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to process password reset request.",
+    });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      res.status(400).json({ success: false, message: "Token and new password are required" });
+      return;
+    }
+
+    if (password.length < 6) {
+      res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+      return;
+    }
+
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: new Date() },
+    }).select("+resetToken +resetTokenExpiry +password");
+
+    if (!user) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token. Please request a new reset link.",
+      });
+      return;
+    }
+
+    user.password = password;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password has been reset successfully.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reset password.",
     });
   }
 };

@@ -8,6 +8,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  role?: string;
   businessName?: string;
   country?: string;
 }
@@ -24,6 +25,7 @@ interface AuthContextType {
     country?: string;
   }) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -55,12 +57,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
       const response = await authAPI.login({ email, password });
       if (response.success) {
         setUser(response.data.user);
-        // Don't redirect here, let the component handle it
       } else {
         throw new Error('Login failed');
       }
@@ -81,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await authAPI.register(data);
       if (response.success) {
         setUser(response.data.user);
-        router.push('/export-readiness/dashboard');
       } else {
         throw new Error('Registration failed');
       }
@@ -97,6 +97,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.getCurrentUser();
+      if (response.success) {
+        setUser(response.data.user);
+      }
+    } catch {
+      // Silently fail
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -105,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         register,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
       }}
     >

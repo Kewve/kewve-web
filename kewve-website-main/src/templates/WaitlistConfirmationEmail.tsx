@@ -66,7 +66,7 @@ export const WaitlistConfirmationEmailTemplate = (data: WaitlistConfirmationEmai
       
       <div style={{ marginTop: '40px', textAlign: 'center', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
         <img 
-          src={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://kewve.com'}/images/email-footer.png`}
+          src={`${process.env.FRONTEND_URL || 'https://kewve.com'}/images/email-footer.png`}
           alt="Kewve Footer" 
           style={{ maxWidth: '100%', height: 'auto' }}
         />

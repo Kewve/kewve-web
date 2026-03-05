@@ -14,10 +14,6 @@
 html,
 body {
   overflow-x: hidden !important;
-}
-
-/* Cross-browser header/logo normalization */
-header {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

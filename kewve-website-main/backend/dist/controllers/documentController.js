@@ -23,15 +23,23 @@ export const uploadDocument = async (req, res) => {
         if (!assessment) {
             assessment = await Assessment.create({ userId });
         }
+        const category = req.body?.category || undefined;
         // Store file data in database as Buffer
         const document = {
             name: file.originalname,
             type: file.mimetype,
-            data: Buffer.from(file.buffer), // Ensure it's a proper Buffer
+            data: Buffer.from(file.buffer),
             size: file.size,
             uploadedAt: new Date(),
         };
+        if (category) {
+            document.category = category;
+        }
         assessment.documents = assessment.documents || [];
+        // If re-uploading for the same category, remove the old document (e.g. rejected doc being replaced)
+        if (category) {
+            assessment.documents = assessment.documents.filter((d) => d.category !== category);
+        }
         assessment.documents.push(document);
         console.log("Saving assessment with document...");
         await assessment.save();
@@ -52,6 +60,7 @@ export const uploadDocument = async (req, res) => {
                     name: document.name,
                     type: document.type,
                     size: document.size,
+                    category: document.category,
                     uploadedAt: document.uploadedAt,
                 },
             },

@@ -23,16 +23,14 @@ function Footer() {
           <Link href='/privacy' className={footerLinkClassName}>
             Privacy Policy
           </Link>
-          <Link href='/marketplace-terms' className={footerLinkClassName}>
-            Marketplace Term & Conditions
-          </Link>
+          
         </div>
         <div className='flex justify-between items-center'>
           <span className={`text-sm lg:text-base text-white ${josefin.className}`}>
             &copy; KEWVE {new Date().getFullYear()}
           </span>
-          <a href='https://www.thewebagency.io/' className={`text-sm lg:text-base text-white ${josefin.className}`}>
-            Developed by The Web Agency
+          <a href='https://www.clearcutcode.com' target='_blank' rel='noopener noreferrer' className={`text-sm lg:text-base text-white ${josefin.className}`}>
+            Developed by ClearCutCode
           </a>
         </div>
       </div>

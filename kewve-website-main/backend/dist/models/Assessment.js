@@ -8,6 +8,10 @@ const DocumentSchema = new Schema({
         type: String,
         required: true,
     },
+    category: {
+        type: String,
+        required: false,
+    },
     // Support both old (url) and new (data) document storage
     url: {
         type: String,
@@ -26,6 +30,19 @@ const DocumentSchema = new Schema({
             // Only require size if url is not present (new documents)
             return !this.url;
         },
+    },
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+    },
+    rejectionReason: {
+        type: String,
+        required: false,
+    },
+    reviewedAt: {
+        type: Date,
+        required: false,
     },
     uploadedAt: {
         type: Date,
@@ -107,7 +124,7 @@ const AssessmentSchema = new Schema({
     },
     monthlyProductionCapacity: {
         type: String,
-        enum: ["less-than-1000", "1000-5000", "5000-10000", "10000-50000", "50000-plus"],
+        enum: ["less-than-500", "500-1000", "1000-5000", "5000-plus"],
     },
     consistentSupply: {
         type: String,
@@ -152,6 +169,7 @@ const AssessmentSchema = new Schema({
     },
 }, {
     timestamps: true,
+    strict: false,
 });
 // Create unique index on userId to ensure one assessment per user
 AssessmentSchema.index({ userId: 1 }, { unique: true });

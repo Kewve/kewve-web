@@ -19,7 +19,7 @@ const plans: PricingPlan[] = [
   {
     name: 'Starter',
     tagline: 'For new exporters.',
-    price: '€99',
+    price: '€100',
     cadence: 'one-time',
     features: ['Export Readiness Assessment', 'Basic Documentation Guide', 'Community Access', 'Email Support'],
     ctaLabel: 'Get Started',

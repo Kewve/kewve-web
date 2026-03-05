@@ -1,17 +1,23 @@
-import { Poppins, Josefin_Sans } from 'next/font/google';
-import localFont from 'next/font/local';
+import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 
-export const regalDisplay = localFont({
-  src: [
-    { path: '../../public/fonts/PFRegalDisplayPro-Black.ttf', weight: '900' },
-    { path: '../../public/fonts/PFRegalDisplayPro-Bold.ttf', weight: '700' },
-  ],
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-dm-sans',
 });
 
-export const titleFont = localFont({
-  src: [{ path: '../../public/fonts/RoxboroughCF.ttf', weight: '900' }],
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-dm-serif',
 });
 
-export const poppinsRegular = Poppins({ weight: '400', subsets: ['latin'] });
-export const josefinSemiBold = Josefin_Sans({ weight: '600', subsets: ['latin'] });
-export const josefinRegular = Josefin_Sans({ weight: '400', subsets: ['latin'] });
+export const titleFont = dmSerifDisplay;
+export const regalDisplay = dmSerifDisplay;
+
+export const josefinSemiBold = DM_Sans({ weight: '600', subsets: ['latin'] });
+export const josefinRegular = DM_Sans({ weight: '400', subsets: ['latin'] });
+export const poppinsRegular = DM_Sans({ weight: '400', subsets: ['latin'] });
+
+export { dmSans, dmSerifDisplay };
