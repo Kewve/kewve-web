@@ -101,19 +101,19 @@ export default async function Home() {
       </section>
 
       {/* ── Wave: cream → orange ── */}
-      <div className='bg-orange -mb-px'>
+      <div className='bg-orange -mb-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[50px] sm:h-[70px] lg:h-[100px] block'>
           <path d='M0,60 C320,100 520,0 720,50 C920,100 1120,20 1440,60 L1440,0 L0,0 Z' fill='#faf8f5' />
         </svg>
       </div>
 
       {/* ── Product Carousel ── */}
-      <section className='bg-white'>
+      <section className='bg-orange -mt-[2px] -mb-[2px] overflow-hidden leading-none'>
         <ProductCarousel items={products} />
       </section>
 
       {/* ── Wave: orange → cream ── */}
-      <div className='bg-[#faf8f5] -mt-px'>
+      <div className='bg-[#faf8f5] -mt-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[50px] sm:h-[70px] lg:h-[100px] block'>
           <path d='M0,60 C320,100 520,0 720,50 C920,100 1120,20 1440,60 L1440,0 L0,0 Z' fill='#ed722d' />
         </svg>
@@ -149,7 +149,7 @@ export default async function Home() {
       </section>
 
       {/* ── Wave: cream → white ── */}
-      <div className='bg-white -mb-px'>
+      <div className='bg-white -mb-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[40px] sm:h-[55px] lg:h-[70px] block'>
           <path d='M0,55 C360,105 1080,5 1440,55 L1440,0 L0,0 Z' fill='#faf8f5' />
         </svg>
@@ -180,7 +180,7 @@ export default async function Home() {
       </section>
 
       {/* ── Wave: cream → orange ── */}
-      <div className='bg-orange -mb-px'>
+      <div className='bg-orange -mb-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[50px] sm:h-[70px] lg:h-[100px] block'>
           <path d='M0,40 C360,100 1080,0 1440,60 L1440,0 L0,0 Z' fill='#faf8f5' />
         </svg>
@@ -218,7 +218,7 @@ export default async function Home() {
       </section>
 
       {/* ── Wave: orange → cream ── */}
-      <div className='bg-[#faf8f5] -mt-px'>
+      <div className='bg-[#faf8f5] -mt-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[50px] sm:h-[70px] lg:h-[100px] block'>
           <path d='M0,60 C320,100 520,0 720,50 C920,100 1120,20 1440,60 L1440,0 L0,0 Z' fill='#ed722d' />
         </svg>
@@ -253,7 +253,7 @@ export default async function Home() {
       </section>
 
       {/* ── Wave: cream → orange ── */}
-      <div className='bg-orange -mb-px'>
+      <div className='bg-orange -mb-[2px] overflow-hidden leading-none'>
         <svg viewBox='0 0 1440 100' preserveAspectRatio='none' className='w-full h-[50px] sm:h-[70px] lg:h-[100px] block'>
           <path d='M0,40 C360,100 1080,0 1440,60 L1440,0 L0,0 Z' fill='#faf8f5' />
         </svg>

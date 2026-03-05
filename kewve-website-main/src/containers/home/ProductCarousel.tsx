@@ -13,7 +13,7 @@ function ProductCarousel({ items }: ProductCarouselProps) {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className='bg-orange py-6 lg:py-10 overflow-hidden'>
+    <section className='relative bg-orange py-6 lg:py-10 overflow-hidden -mt-[1px] -mb-[1px]'>
       <InfiniteMovingCards>
         <>
           {items.map((item) => {

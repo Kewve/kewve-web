@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import {
   Check,
   Shield,
@@ -13,6 +14,20 @@ import {
 } from 'lucide-react';
 import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
 import Link from 'next/link';
+
+const STANDARD_PRICE_CENTS = 10000;
+
+const formatEuro = (cents: number) => `EUR${(cents / 100).toFixed(0)}`;
+
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== 'undefined') {
+    const { origin } = window.location;
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return 'http://localhost:5000/api';
+    return `${origin}/api`;
+  }
+  return '/api';
+};
 
 const steps = [
   {
@@ -75,40 +90,127 @@ const benefits = [
 ];
 
 export default function AssessmentLanding() {
+  const [tierPriceCents, setTierPriceCents] = useState(STANDARD_PRICE_CENTS);
+
+  useEffect(() => {
+    const loadTierPrice = async () => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/pricing/assessment-tier`, { method: 'GET' });
+        if (!res.ok) return;
+        const json = await res.json();
+        const cents = Number(json?.data?.unitAmountCents);
+        if (Number.isFinite(cents) && cents > 0) {
+          setTierPriceCents(cents);
+        }
+      } catch {
+        // Keep fallback standard price if fetch fails.
+      }
+    };
+
+    loadTierPrice();
+  }, []);
+
+  const discountPercent = useMemo(() => {
+    const pct = Math.round(((STANDARD_PRICE_CENTS - tierPriceCents) / STANDARD_PRICE_CENTS) * 100);
+    return Math.max(0, pct);
+  }, [tierPriceCents]);
+
+  const hasDiscount = tierPriceCents < STANDARD_PRICE_CENTS;
+
   return (
     <>
       {/* Hero Section */}
-      <section className='bg-cream pt-24 lg:pt-32 pb-16 lg:pb-20'>
-        <div className='max-w-4xl mx-auto px-5 lg:px-6 text-center'>
-          <div className='inline-flex items-center gap-2 bg-orange/10 text-orange px-4 py-2 rounded-full mb-6'>
-            <Sparkles className='w-4 h-4' />
-            <span className={`text-sm ${josefinSemiBold.className}`}>Export Readiness Assessment</span>
+      <section className='bg-cream pt-20 lg:pt-32 pb-14 lg:pb-20'>
+        <div className='max-w-6xl mx-auto px-5 lg:px-6'>
+          <div className='grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6 lg:gap-10 items-start lg:items-center'>
+            <div>
+              <div className='inline-flex items-center gap-2 bg-orange/10 text-orange px-4 py-2 rounded-full mb-6'>
+                <Sparkles className='w-4 h-4' />
+                <span className={`text-sm ${josefinSemiBold.className}`}>Export Readiness Assessment</span>
+              </div>
+
+              <h1 className={`text-4xl sm:text-5xl lg:text-6xl text-black leading-tight mb-5 ${titleFont.className}`}>
+                Your Path to Export Success Starts Here
+              </h1>
+
+              <p className={`text-base sm:text-lg md:text-xl text-black-muted leading-relaxed max-w-2xl mb-6 ${josefinRegular.className}`}>
+                Kewve&apos;s Export Readiness Assessment evaluates your business across compliance, packaging, logistics and pricing
+                — then delivers a personalised action plan to get you into UK &amp; EU markets.
+              </p>
+
+              <div className='bg-white/70 backdrop-blur-sm rounded-2xl border border-black/5 p-4 sm:p-6 max-w-2xl'>
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <p className={`text-2xl leading-none text-orange ${josefinSemiBold.className}`}>✓</p>
+                    <p className={`text-lg sm:text-xl text-black ${josefinSemiBold.className}`}>Compliance Ready</p>
+                    <p className={`text-base sm:text-lg text-black-muted/80 leading-snug ${josefinRegular.className}`}>
+                      Become compliant with UK &amp; EU regulations.
+                    </p>
+                  </div>
+                  <div className='space-y-2'>
+                    <p className={`text-2xl leading-none text-orange ${josefinSemiBold.className}`}>✓</p>
+                    <p className={`text-lg sm:text-xl text-black ${josefinSemiBold.className}`}>Export Pricing Strategy</p>
+                    <p className={`text-base sm:text-lg text-black-muted/80 leading-snug ${josefinRegular.className}`}>
+                      Set competitive pricing in international markets.
+                    </p>
+                  </div>
+                </div>
+                <div className='h-px bg-black/10 my-4' />
+                <div className='space-y-2'>
+                  <p className={`text-2xl leading-none text-orange ${josefinSemiBold.className}`}>✓</p>
+                  <p className={`text-lg sm:text-xl text-black ${josefinSemiBold.className}`}>Buyer Connections</p>
+                  <p className={`text-base sm:text-lg text-black-muted/80 leading-snug ${josefinRegular.className}`}>
+                    Connect with real buyers and expand your reach.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className='relative bg-white rounded-3xl shadow-xl border border-black/5 p-5 sm:p-7'>
+              {hasDiscount && (
+                <div className='hidden sm:block absolute top-0 right-0 w-32 h-32 overflow-hidden rounded-tr-3xl pointer-events-none z-10'>
+                  <div className='absolute top-5 -right-11 w-44 bg-orange text-white py-1 text-center rotate-45 leading-tight'>
+                    <span className={`block text-[11px] ${josefinSemiBold.className}`}>{discountPercent}% OFF</span>
+                    <span className={`block text-[9px] ${josefinRegular.className}`}>First 100 only</span>
+                  </div>
+                </div>
+              )}
+
+              <div className='flex items-center gap-2 text-black/80 mb-3'>
+                <Sparkles className='w-4 h-4 text-[#e0a633]' />
+                <p className={`text-sm sm:text-lg ${josefinSemiBold.className}`}>
+                  {hasDiscount ? `Limited Offer - ${discountPercent}% Off` : 'Current Offer'}
+                </p>
+              </div>
+              {hasDiscount && (
+                <div className='sm:hidden inline-flex items-center rounded-full bg-orange/10 text-orange px-3 py-1 mb-3'>
+                  <span className={`text-xs ${josefinSemiBold.className}`}>{discountPercent}% OFF - first 100 only</span>
+                </div>
+              )}
+              <div className='h-px bg-black/10 mb-5' />
+
+              <div className='mb-6 text-center'>
+                {hasDiscount && (
+                  <span className={`text-2xl sm:text-4xl text-black/45 line-through mr-2 sm:mr-3 ${josefinRegular.className}`}>
+                    {formatEuro(STANDARD_PRICE_CENTS)}
+                  </span>
+                )}
+                <span className={`text-4xl sm:text-5xl text-orange ${josefinSemiBold.className}`}>{formatEuro(tierPriceCents)}</span>
+              </div>
+
+              <Link
+                href='/register'
+                className={`group inline-flex justify-center items-center gap-2 w-full bg-orange text-white rounded-md py-3.5 sm:py-4 px-6 text-xl sm:text-2xl transition-all hover:opacity-90 cursor-pointer ${josefinSemiBold.className}`}>
+                Get Started
+                <ArrowRight className='w-6 h-6 group-hover:translate-x-1 transition-transform' />
+              </Link>
+
+              <p className={`text-center text-sm sm:text-base text-black-muted/60 mt-4 ${josefinRegular.className}`}>
+                One-time payment &middot; No recurring fees
+              </p>
+              <p className={`text-center text-sm sm:text-base text-black-muted/60 mt-0.5 ${josefinRegular.className}`}>Secure via Stripe</p>
+            </div>
           </div>
-
-          <h1 className={`text-4xl md:text-5xl lg:text-6xl text-black leading-tight mb-6 ${titleFont.className}`}>
-            Your Path to Export Success Starts Here
-          </h1>
-
-          <p className={`text-lg md:text-xl text-black-muted leading-relaxed max-w-2xl mx-auto mb-8 ${josefinRegular.className}`}>
-            Kewve&apos;s Export Readiness Assessment evaluates your business across every dimension that matters — compliance,
-            packaging, logistics, pricing — and delivers a personalised action plan to get your products into UK &amp; EU markets.
-          </p>
-
-          <p className={`text-base text-black-muted/70 max-w-xl mx-auto mb-10 ${josefinRegular.className}`}>
-            We don&apos;t just assess — we hold your hand through every step until you&apos;re export-ready, then connect you
-            with real buyers.
-          </p>
-
-          <Link
-            href='/register'
-            className={`group inline-flex items-center gap-2 bg-brand-green text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:opacity-90 cursor-pointer ${josefinSemiBold.className}`}>
-            Get Started — €100
-            <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
-          </Link>
-
-          <p className={`text-sm text-black-muted/50 mt-4 ${josefinRegular.className}`}>
-            One-time payment &middot; No recurring charges &middot; Secure payment via Stripe
-          </p>
         </div>
       </section>
 
@@ -214,11 +316,16 @@ export default function AssessmentLanding() {
           <Link
             href='/register'
             className={`group inline-flex items-center gap-2 bg-orange text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:bg-orange/90 cursor-pointer ${josefinSemiBold.className}`}>
-            Get Started — €100
+            Get Started —
+            <span className='line-through opacity-70'>€100</span>
+            <span>€50</span>
             <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
           </Link>
 
-          <p className={`text-sm text-black-muted/50 mt-4 ${josefinRegular.className}`}>
+          <p className={`text-sm text-black-muted/70 mt-4 ${josefinRegular.className}`}>
+            New signups: first 100 get 50% off (pay €50).
+          </p>
+          <p className={`text-sm text-black-muted/50 mt-1 ${josefinRegular.className}`}>
             Secure payment via Stripe &middot; One-time fee &middot; No hidden charges
           </p>
         </div>

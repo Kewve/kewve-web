@@ -43,7 +43,7 @@ function OurStory({ content }: { content: OurStoryPageDocumentData }) {
           </motion.p>
         </div>
       </section>
-      <section className='bg-yellow'>
+      <section className='bg-yellow -mt-[2px] -mb-[2px] overflow-hidden leading-none'>
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'>
           <path
             fill='#ed722d'
@@ -118,7 +118,7 @@ function OurStory({ content }: { content: OurStoryPageDocumentData }) {
           </div>
         </div>
       </section>
-      <section className='bg-orange'>
+      <section className='bg-orange -mb-[2px] overflow-hidden leading-none'>
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200'>
           <path
             fill='#eeb944'

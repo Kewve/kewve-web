@@ -40,11 +40,14 @@ function Header({ needsBackground = false }: HeaderProps) {
             Home
           </Link>
           <Link prefetch href='/our-story' className={headerLinkClassName}>
-            About Us
+            Our Story
           </Link>
           <Link prefetch href='/' className='relative flex items-center justify-center shrink-0 mx-4 xl:mx-8'>
             <Image src='/logo-color.png' width={200} height={32} alt='Kewve logo' className='relative z-50 h-8 w-auto' />
-            <div className='absolute left-1/2 -translate-x-1/2 -top-[110px] rounded-full bg-white h-48 w-52 z-0'></div>
+            <div
+              className={`absolute left-1/2 -translate-x-1/2 -top-[110px] rounded-full h-48 w-52 z-0 ${
+                needsBackground ? 'bg-[#faf8f5]' : 'bg-white'
+              }`}></div>
           </Link>
           <Link prefetch href='/blog' className={headerLinkClassName}>
             Blog
@@ -71,7 +74,10 @@ function Header({ needsBackground = false }: HeaderProps) {
         <div className='flex relative z-50 overflow-visible lg:hidden justify-between items-center bg-orange py-4 px-4'>
           <Link prefetch href='/' className='relative flex items-center shrink-0'>
             <Image src='/logo-color.png' width={200} height={28} alt='Kewve logo' className='relative z-50 h-7 w-auto' />
-            <div className='absolute left-1/2 -translate-x-1/2 -top-[100px] rounded-full bg-white h-48 w-48 z-10'></div>
+            <div
+              className={`absolute left-1/2 -translate-x-1/2 -top-[100px] rounded-full h-48 w-48 z-10 ${
+                needsBackground ? 'bg-[#faf8f5]' : 'bg-white'
+              }`}></div>
           </Link>
           <Menu className='text-white cursor-pointer h-8 w-auto' onClick={() => setMobileMenuOpen(true)} />
         </div>
