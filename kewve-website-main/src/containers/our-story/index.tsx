@@ -6,8 +6,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import type { OurStoryPageDocumentData } from '../../../prismicio-types';
 
-function OurStory({ content }: { content: OurStoryPageDocumentData }) {
+function OurStory({ content }: { content: OurStoryPageDocumentData | null }) {
   const sectionHeadingClass = `text-3xl md:text-4xl xl:text-5xl font-bold text-black mb-4 text-center lg:text-left ${titleFont.className}`;
+  const sectionImage = content?.section_image;
 
   const storyParagraphs = [
     'Kewve began with a simple belief: African food deserves a place on global supermarket shelves, not just in ethnic stores.',
@@ -103,16 +104,22 @@ function OurStory({ content }: { content: OurStoryPageDocumentData }) {
             </div>
             <div className='col-span-2 lg:col-span-1 order-1 lg:order-2'>
               <div className='relative'>
-                <motion.img
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true, amount: 1 }}
-                  src={content.section_image.url || ''}
-                  alt={content.section_image.alt || ''}
-                  width={600}
-                  height={400}
-                  className='relative w-full h-auto aspect-square rounded-xl shadow-lg z-20'
-                />
+                {sectionImage?.url ? (
+                  <motion.img
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true, amount: 1 }}
+                    src={sectionImage.url}
+                    alt={sectionImage.alt || 'Our Story image'}
+                    width={600}
+                    height={400}
+                    className='relative w-full h-auto aspect-square rounded-xl shadow-lg z-20'
+                  />
+                ) : (
+                  <div className='relative w-full aspect-square rounded-xl bg-black/10 z-20 flex items-center justify-center'>
+                    <p className={`text-sm text-black/60 ${josefinRegular.className}`}>Image coming soon</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

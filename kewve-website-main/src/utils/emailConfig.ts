@@ -51,6 +51,12 @@ export const sendEmail = async (options: {
 }) => {
   const transporter = createEmailTransporter();
   const fromEmail = options.from || process.env.SMTP_FROM || process.env.SMTP_USER || 'abiola@kewve.com';
+  const frontendBaseUrl =
+    process.env.FRONTEND_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    'https://kewve.com';
+  const footerImageFallbackUrl = `${frontendBaseUrl.replace(/\/$/, '')}/logo-color.png`;
 
   try {
     const mailOptions: any = {
@@ -61,6 +67,7 @@ export const sendEmail = async (options: {
     };
 
     // Attach footer image if requested (for inline display)
+    let footerImageAttached = false;
     if (options.attachFooterImage) {
       try {
         // Try to read from public/images first (Next.js public folder)
@@ -74,6 +81,7 @@ export const sendEmail = async (options: {
             cid: 'footer-image', // Content-ID for inline image
           },
         ];
+        footerImageAttached = true;
       } catch (error) {
         // Fallback: try backend assets folder
         try {
@@ -87,9 +95,15 @@ export const sendEmail = async (options: {
               cid: 'footer-image',
             },
           ];
+          footerImageAttached = true;
         } catch (backendError) {
           console.warn('⚠️ Could not attach footer image, email will use URL fallback');
         }
+      }
+
+      // If inline CID attachment is unavailable, replace CID references with a public URL.
+      if (!footerImageAttached && typeof mailOptions.html === 'string') {
+        mailOptions.html = mailOptions.html.replace(/cid:footer-image/g, footerImageFallbackUrl);
       }
     }
 
