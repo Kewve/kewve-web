@@ -90,32 +90,60 @@ const benefits = [
 ];
 
 export default function AssessmentLanding() {
-  const [tierPriceCents, setTierPriceCents] = useState(STANDARD_PRICE_CENTS);
+  const [tierPriceCents, setTierPriceCents] = useState<number | null>(null);
+  const [isTierResolved, setIsTierResolved] = useState(false);
 
   useEffect(() => {
     const loadTierPrice = async () => {
+      let hadCachedTier = false;
+      if (typeof window !== 'undefined') {
+        const cachedTier = Number(window.sessionStorage.getItem('assessment-tier-price-cents') || '');
+        if (Number.isFinite(cachedTier) && cachedTier > 0) {
+          setTierPriceCents(cachedTier);
+          setIsTierResolved(true);
+          hadCachedTier = true;
+        }
+      }
+
       try {
         const res = await fetch(`${getApiBaseUrl()}/pricing/assessment-tier`, { method: 'GET' });
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!hadCachedTier) {
+            setTierPriceCents(STANDARD_PRICE_CENTS);
+            setIsTierResolved(true);
+          }
+          return;
+        }
         const json = await res.json();
         const cents = Number(json?.data?.unitAmountCents);
         if (Number.isFinite(cents) && cents > 0) {
           setTierPriceCents(cents);
+          if (typeof window !== 'undefined') {
+            window.sessionStorage.setItem('assessment-tier-price-cents', String(cents));
+          }
+        } else if (!hadCachedTier) {
+          setTierPriceCents(STANDARD_PRICE_CENTS);
         }
       } catch {
-        // Keep fallback standard price if fetch fails.
+        if (!hadCachedTier) {
+          setTierPriceCents(STANDARD_PRICE_CENTS);
+        }
+      } finally {
+        setIsTierResolved(true);
       }
     };
 
     loadTierPrice();
   }, []);
 
+  const displayedPriceCents = tierPriceCents ?? STANDARD_PRICE_CENTS;
   const discountPercent = useMemo(() => {
-    const pct = Math.round(((STANDARD_PRICE_CENTS - tierPriceCents) / STANDARD_PRICE_CENTS) * 100);
+    const pct = Math.round(((STANDARD_PRICE_CENTS - displayedPriceCents) / STANDARD_PRICE_CENTS) * 100);
     return Math.max(0, pct);
-  }, [tierPriceCents]);
+  }, [displayedPriceCents]);
 
-  const hasDiscount = tierPriceCents < STANDARD_PRICE_CENTS;
+  const hasDiscount = displayedPriceCents < STANDARD_PRICE_CENTS;
+  const isTierLoading = !isTierResolved && tierPriceCents === null;
 
   return (
     <>
@@ -167,7 +195,7 @@ export default function AssessmentLanding() {
             </div>
 
             <div className='relative bg-white rounded-3xl shadow-xl border border-black/5 p-5 sm:p-7'>
-              {hasDiscount && (
+              {!isTierLoading && hasDiscount && (
                 <div className='hidden sm:block absolute top-0 right-0 w-32 h-32 overflow-hidden rounded-tr-3xl pointer-events-none z-10'>
                   <div className='absolute top-5 -right-11 w-44 bg-orange text-white py-1 text-center rotate-45 leading-tight'>
                     <span className={`block text-[11px] ${josefinSemiBold.className}`}>{discountPercent}% OFF</span>
@@ -179,10 +207,10 @@ export default function AssessmentLanding() {
               <div className='flex items-center gap-2 text-black/80 mb-3'>
                 <Sparkles className='w-4 h-4 text-[#e0a633]' />
                 <p className={`text-sm sm:text-lg ${josefinSemiBold.className}`}>
-                  {hasDiscount ? `Limited Offer - ${discountPercent}% Off` : 'Current Offer'}
+                  {isTierLoading ? 'Checking current offer...' : hasDiscount ? `Limited Offer - ${discountPercent}% Off` : 'Current Offer'}
                 </p>
               </div>
-              {hasDiscount && (
+              {!isTierLoading && hasDiscount && (
                 <div className='sm:hidden inline-flex items-center rounded-full bg-orange/10 text-orange px-3 py-1 mb-3'>
                   <span className={`text-xs ${josefinSemiBold.className}`}>{discountPercent}% OFF - first 100 only</span>
                 </div>
@@ -190,12 +218,14 @@ export default function AssessmentLanding() {
               <div className='h-px bg-black/10 mb-5' />
 
               <div className='mb-6 text-center'>
-                {hasDiscount && (
+                {(isTierLoading || hasDiscount) && (
                   <span className={`text-2xl sm:text-4xl text-black/45 line-through mr-2 sm:mr-3 ${josefinRegular.className}`}>
                     {formatEuro(STANDARD_PRICE_CENTS)}
                   </span>
                 )}
-                <span className={`text-4xl sm:text-5xl text-orange ${josefinSemiBold.className}`}>{formatEuro(tierPriceCents)}</span>
+                <span className={`text-4xl sm:text-5xl text-orange ${josefinSemiBold.className}`}>
+                  {isTierLoading ? '...' : formatEuro(displayedPriceCents)}
+                </span>
               </div>
 
               <Link
