@@ -133,15 +133,39 @@ export default async function Home() {
             <ul className='space-y-4'>
               <li className='flex items-start gap-3'>
                 <CheckCircle className='h-5 w-5 text-orange mt-0.5 shrink-0' />
-                <p className={`text-base sm:text-lg text-[#1a1a1a] leading-relaxed ${josefinRegular.className}`}>We help you become export-ready.</p>
+                <div>
+                  <p className={`text-base sm:text-lg text-[#1a1a1a] ${josefinSemiBold.className}`}>Become export-ready</p>
+                  <p className={`text-sm sm:text-base text-[#5a5a5a] leading-relaxed ${josefinRegular.className}`}>
+                    We assess your products, processes, and documentation against UK and EU requirements so you know exactly what is needed to export.
+                  </p>
+                </div>
               </li>
               <li className='flex items-start gap-3'>
                 <CheckCircle className='h-5 w-5 text-orange mt-0.5 shrink-0' />
-                <p className={`text-base sm:text-lg text-[#1a1a1a] leading-relaxed ${josefinRegular.className}`}>We organise supply into structured products.</p>
+                <div>
+                  <p className={`text-base sm:text-lg text-[#1a1a1a] ${josefinSemiBold.className}`}>Structure your supply</p>
+                  <p className={`text-sm sm:text-base text-[#5a5a5a] leading-relaxed ${josefinRegular.className}`}>
+                    We organise your products into clear specifications, volumes, and formats that international buyers can confidently source.
+                  </p>
+                </div>
               </li>
               <li className='flex items-start gap-3'>
                 <CheckCircle className='h-5 w-5 text-orange mt-0.5 shrink-0' />
-                <p className={`text-base sm:text-lg text-[#1a1a1a] leading-relaxed ${josefinRegular.className}`}>We prepare you for UK &amp; EU trade.</p>
+                <div>
+                  <p className={`text-base sm:text-lg text-[#1a1a1a] ${josefinSemiBold.className}`}>Build compliance and trust</p>
+                  <p className={`text-sm sm:text-base text-[#5a5a5a] leading-relaxed ${josefinRegular.className}`}>
+                    We help ensure your labelling, food safety, traceability, and documentation align with international expectations.
+                  </p>
+                </div>
+              </li>
+              <li className='flex items-start gap-3'>
+                <CheckCircle className='h-5 w-5 text-orange mt-0.5 shrink-0' />
+                <div>
+                  <p className={`text-base sm:text-lg text-[#1a1a1a] ${josefinSemiBold.className}`}>Enable smooth trade operations</p>
+                  <p className={`text-sm sm:text-base text-[#5a5a5a] leading-relaxed ${josefinRegular.className}`}>
+                    We support structured trade execution including documentation, order coordination, and payment operations so transactions run smoothly.
+                  </p>
+                </div>
               </li>
             </ul>
           </div>
