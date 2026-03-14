@@ -188,9 +188,17 @@ router.post("/admin/discount-codes", authenticateAdmin, async (req: AuthRequest,
       return;
     }
 
+    const rawDiscount = req.body?.discountPercent;
+    const parsedDiscount =
+      typeof rawDiscount === "number"
+        ? rawDiscount
+        : typeof rawDiscount === "string"
+          ? Number(rawDiscount)
+          : NaN;
+
     const discountPercent =
-      typeof req.body?.discountPercent === "number" && req.body.discountPercent > 0
-        ? Math.min(100, Math.floor(req.body.discountPercent))
+      Number.isFinite(parsedDiscount) && parsedDiscount > 0
+        ? Math.min(100, Math.floor(parsedDiscount))
         : 15;
 
     const createdBy = ((req as any).user?.email || "admin").toString();

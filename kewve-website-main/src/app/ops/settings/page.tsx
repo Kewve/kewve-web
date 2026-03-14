@@ -17,6 +17,7 @@ export default function OpsSettingsPage() {
   const [lastName, setLastName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [newCode, setNewCode] = useState('');
+  const [newDiscountPercent, setNewDiscountPercent] = useState('10');
   const [discountCodes, setDiscountCodes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -81,13 +82,23 @@ export default function OpsSettingsPage() {
 
   const handleCreateCode = async () => {
     const code = newCode.trim().toUpperCase();
+    const parsedPercent = Number(newDiscountPercent);
     if (!code) return;
+    if (!Number.isFinite(parsedPercent) || parsedPercent <= 0 || parsedPercent > 100) {
+      toast({
+        title: 'Invalid discount',
+        description: 'Enter a discount percentage between 1 and 100.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setCodeSaving(true);
     try {
-      const res = await adminAPI.createDiscountCode({ code, discountPercent: 15 });
+      const res = await adminAPI.createDiscountCode({ code, discountPercent: Math.floor(parsedPercent) });
       if (res.success) {
-        toast({ title: 'Code created', description: `${code} is now active with 15% discount.` });
+        toast({ title: 'Code created', description: `${code} is now active with ${Math.floor(parsedPercent)}% discount.` });
         setNewCode('');
+        setNewDiscountPercent('10');
         await loadDiscountCodes();
       }
     } catch (error: any) {
@@ -158,9 +169,9 @@ export default function OpsSettingsPage() {
         </div>
 
         <div className='bg-white rounded-xl border border-gray-200 p-6'>
-          <h2 className={`text-lg font-semibold text-gray-900 mb-4 ${josefinSemiBold.className}`}>Discount Codes (15% off)</h2>
+          <h2 className={`text-lg font-semibold text-gray-900 mb-4 ${josefinSemiBold.className}`}>Discount Codes</h2>
 
-          <div className='flex flex-col sm:flex-row gap-3 mb-5'>
+          <div className='grid grid-cols-1 sm:grid-cols-[1fr_170px_auto] gap-3 mb-5'>
             <input
               type='text'
               value={newCode}
@@ -168,9 +179,21 @@ export default function OpsSettingsPage() {
               placeholder='Enter unique code (e.g. PARTNER15A)'
               className={`flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent ${josefinRegular.className}`}
             />
+            <div className='relative'>
+              <input
+                type='number'
+                min={1}
+                max={100}
+                value={newDiscountPercent}
+                onChange={(e) => setNewDiscountPercent(e.target.value)}
+                placeholder='10'
+                className={`w-full border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent ${josefinRegular.className}`}
+              />
+              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 ${josefinRegular.className}`}>%</span>
+            </div>
             <button
               onClick={handleCreateCode}
-              disabled={codeSaving || !newCode.trim()}
+              disabled={codeSaving || !newCode.trim() || !newDiscountPercent.trim()}
               className={`bg-[#ed722d] text-white rounded-lg px-5 py-2.5 text-sm transition-colors hover:opacity-90 disabled:opacity-50 flex items-center gap-2 ${josefinSemiBold.className}`}>
               {codeSaving && <Loader2 className='w-4 h-4 animate-spin' />}
               Create Code
