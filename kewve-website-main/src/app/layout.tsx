@@ -8,7 +8,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'KEWVE',
-  description: 'Love Africa! Taste Africa!',
+  description: 'African Food. Built for Trade.',
 };
 
 export default function RootLayout({
