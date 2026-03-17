@@ -101,9 +101,14 @@ export async function completeRegistration(sessionId: string) {
             <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 8px;">
               You can log in and begin your assessment here:
             </p>
-            <p style="margin: 0 0 16px;">
-              <a href="${loginUrl}" style="color: #ed722d; text-decoration: underline; font-size: 15px;">${loginUrl}</a>
-            </p>
+            <div style="margin: 0 0 18px; text-align: left;">
+              <a
+                href="${loginUrl}"
+                style="display: inline-block; background-color: #ed722d; color: #ffffff; text-decoration: none; padding: 12px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;"
+              >
+                Login
+              </a>
+            </div>
             <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
               If you have any questions along the way, feel free to reply to this email. We are happy to support you.
             </p>
