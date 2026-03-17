@@ -68,22 +68,54 @@ export async function completeRegistration(sessionId: string) {
 
     try {
       const footerImageSrc = 'cid:footer-image';
+      const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
       await sendEmail({
         to: metadata.registration_email,
-        subject: 'Welcome to Kewve',
+        subject: 'Welcome to Kewve — Let’s get your products ready for global markets',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
-            <h2 style="color: #1a2e23; margin: 0 0 16px;">Welcome to Kewve</h2>
-            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">Hi ${metadata.registration_name},</p>
-            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">
-              Your payment was successful and your account is now active.
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              Hello,
             </p>
-            <p style="color: #3d3935; font-size: 15px; line-height: 1.6;">
-              You can now complete your export readiness assessment and start your journey to UK and EU markets.
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              Welcome to <strong>Kewve</strong>, and thank you for completing your registration.
             </p>
-            <p style="color: #666; font-size: 13px; margin-top: 24px;">
-              If you need support, contact us at hello@kewve.com.
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              We’re excited to have you join a growing community of African food producers preparing their products for international markets.
             </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              Your first step is to complete the <strong>Export Readiness Assessment</strong>. This assessment will help you understand what is required to export your food products to markets such as the <strong>UK and Europe</strong>.
+            </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 8px;">
+              Through the platform, you will:
+            </p>
+            <ul style="color: #3d3935; font-size: 15px; line-height: 1.7; margin: 0 0 16px 20px; padding: 0;">
+              <li>Complete your <strong>Export Readiness Assessment</strong></li>
+              <li>Receive a <strong>clear checklist of export requirements</strong></li>
+              <li>Get <strong>guidance on preparing your business for global trade</strong></li>
+              <li>Create your <strong>supplier profile and product catalogue for buyers</strong></li>
+            </ul>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              Once your assessment is completed, you will receive your <strong>Export Readiness Score and action checklist</strong>, which will guide the steps needed to prepare your business for international trade.
+            </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 8px;">
+              You can log in and begin your assessment here:
+            </p>
+            <p style="margin: 0 0 16px;">
+              <a href="${loginUrl}" style="color: #ed722d; text-decoration: underline; font-size: 15px;">${loginUrl}</a>
+            </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              If you have any questions along the way, feel free to reply to this email. We are happy to support you.
+            </p>
+            <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
+              We look forward to helping you prepare your products for global markets.
+            </p>
+            <div style="margin: 20px 0 0;">
+              <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 2px;">Warm regards,</p>
+              <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 2px;"><strong>Abiola Ofurhie</strong></p>
+              <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 2px;">Founder, Kewve</p>
+              <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0;">www.kewve.com</p>
+            </div>
             <div style="margin-top: 28px; text-align: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
               <img
                 src="${footerImageSrc}"
