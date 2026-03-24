@@ -67,6 +67,7 @@ export async function completeRegistration(sessionId: string) {
     }
 
     try {
+      const firstName = (metadata.registration_name || '').trim().split(/\s+/)[0] || 'there';
       const footerImageSrc = 'cid:footer-image';
       const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
       await sendEmail({
@@ -75,7 +76,7 @@ export async function completeRegistration(sessionId: string) {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px;">
             <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
-              Hello,
+              Hello ${firstName},
             </p>
             <p style="color: #3d3935; font-size: 15px; line-height: 1.6; margin: 0 0 16px;">
               Welcome to <strong>Kewve</strong>, and thank you for completing your registration.
