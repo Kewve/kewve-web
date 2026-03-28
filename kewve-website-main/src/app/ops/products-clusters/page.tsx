@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { titleFont, josefinSemiBold, josefinRegular } from '@/utils';
 import { adminAPI } from '@/lib/api';
-import { displayIdSuffix } from '@/lib/mongoId';
+import { asMongoIdString, displayIdSuffix } from '@/lib/mongoId';
 import { Loader2, Package, Plus, Layers, Wallet, Users, CircleEllipsis, X, CreditCard, MapPin } from 'lucide-react';
 
 const CATEGORY_OPTIONS = [

@@ -935,13 +935,13 @@ export default function TradeOperationsPage() {
               </div>
               {(String(detailsRow.trade?.buyerReceiptNotes || '').trim() ||
                 String(detailsRow.trade?.issueResolutionNote || '').trim() ||
-                (Array.isArray(detailsRow.trade?.issueAdminNotes) && detailsRow.trade.issueAdminNotes.length > 0)) ? (
+                (Array.isArray(detailsRow.trade?.issueAdminNotes) && (detailsRow.trade?.issueAdminNotes?.length ?? 0) > 0)) ? (
                 <div className='border-t border-gray-200 pt-2 mt-2 space-y-2'>
                   <p className={`text-xs font-semibold text-gray-700 ${josefinSemiBold.className}`}>Issue &amp; resolution</p>
                   {String(detailsRow.trade?.buyerReceiptNotes || '').trim() ? (
                     <div className={`rounded border border-amber-100 bg-amber-50/50 p-2 text-sm ${josefinRegular.className}`}>
                       <span className={`text-xs text-gray-500 block mb-0.5 ${josefinSemiBold.className}`}>Buyer message</span>
-                      <p className='text-gray-800 whitespace-pre-wrap'>{detailsRow.trade.buyerReceiptNotes}</p>
+                      <p className='text-gray-800 whitespace-pre-wrap'>{detailsRow.trade?.buyerReceiptNotes}</p>
                     </div>
                   ) : null}
                   {String(detailsRow.trade?.issueResolutionNote || '').trim() ? (
@@ -949,14 +949,14 @@ export default function TradeOperationsPage() {
                       <span className={`text-xs text-gray-500 block mb-0.5 ${josefinSemiBold.className}`}>
                         Public resolution (buyer &amp; producer)
                       </span>
-                      <p className='text-gray-800 whitespace-pre-wrap'>{detailsRow.trade.issueResolutionNote}</p>
+                      <p className='text-gray-800 whitespace-pre-wrap'>{detailsRow.trade?.issueResolutionNote}</p>
                     </div>
                   ) : null}
-                  {Array.isArray(detailsRow.trade?.issueAdminNotes) && detailsRow.trade.issueAdminNotes.length > 0 ? (
+                  {Array.isArray(detailsRow.trade?.issueAdminNotes) && (detailsRow.trade?.issueAdminNotes?.length ?? 0) > 0 ? (
                     <div className={`rounded border border-gray-200 bg-gray-50 p-2 text-sm ${josefinRegular.className}`}>
                       <span className={`text-xs text-gray-500 block mb-1 ${josefinSemiBold.className}`}>Internal notes (ops only)</span>
                       <ul className='space-y-1.5'>
-                        {detailsRow.trade.issueAdminNotes.map((n: { body?: string; authorName?: string; createdAt?: string }, i: number) => (
+                        {(detailsRow.trade?.issueAdminNotes ?? []).map((n: { body?: string; authorName?: string; createdAt?: string }, i: number) => (
                           <li key={i} className='text-xs text-gray-700 whitespace-pre-wrap'>
                             <span className='text-gray-500'>
                               {n.authorName || 'Admin'}

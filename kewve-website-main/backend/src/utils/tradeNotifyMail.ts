@@ -35,7 +35,7 @@ function producerUserIdsToNotify(doc: BuyerRequestDocument): string[] {
       }
     }
   }
-  return [...ids];
+  return Array.from(ids);
 }
 
 /** After invoice is issued — tell the buyer they can pay. */

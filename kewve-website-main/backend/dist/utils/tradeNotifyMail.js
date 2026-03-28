@@ -30,7 +30,7 @@ function producerUserIdsToNotify(doc) {
             }
         }
     }
-    return [...ids];
+    return Array.from(ids);
 }
 /** After invoice is issued — tell the buyer they can pay. */
 export async function notifyBuyerInvoiceSent(doc) {

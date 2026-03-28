@@ -159,7 +159,7 @@ export default function ProducerDetailPage() {
   };
 
   const handleRejectSubmit = async () => {
-    if (!rejectModal || !rejectReason.trim()) return;
+    if (!rejectModal || !rejectReason.trim() || !producer) return;
     setActionLoading(rejectModal.docId);
     try {
       const res = await adminAPI.reviewDocument(

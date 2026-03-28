@@ -260,7 +260,7 @@ export default function ProductFormPage() {
           ? response.data.complianceDocuments.length
           : 0;
         // Fallback: if backend did not persist docs during create, upload them immediately.
-        if (newComplianceFiles.length > 0 && createdDocsCount === 0) {
+        if (newComplianceFiles.length > 0 && createdDocsCount === 0 && savedProductId) {
           setUploadingCompliance(true);
           const uploadRes = await productAPI.uploadComplianceDocuments(savedProductId, newComplianceFiles);
           if (uploadRes.success && uploadRes.data) {
