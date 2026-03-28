@@ -123,6 +123,8 @@ export default function ExportReadinessDashboard() {
   // Calculate scores based on new rubric (total 100)
   const calculateScores = (data: AssessmentData): CategoryScore[] => {
     const yes = (field: string) => data[field] === 'yes';
+    const inProgress = (field: string) => data[field] === 'in_progress';
+    const notApplicable = (field: string) => data[field] === 'not_applicable';
 
     // Core Eligibility & Fundamentals (30 pts)
     let core = 0;
@@ -135,6 +137,11 @@ export default function ExportReadinessDashboard() {
     if (yes('businessDocuments')) core += 2;
     if (yes('taxId')) core += 2;
     if (yes('fixedLocation')) core += 3;
+    if (yes('productRegulatoryApproval')) core += 2;
+    if (inProgress('productRegulatoryApproval')) core += 1;
+    if (yes('facilityInspectionApproval')) core += 2;
+    if (yes('brandTrademarkApproval')) core += 1;
+    if (notApplicable('brandTrademarkApproval')) core += 1;
     // Product Definition (5)
     if (yes('definedProducts')) core += 2;
     if (yes('consistentIngredients')) core += 1;
@@ -163,6 +170,14 @@ export default function ExportReadinessDashboard() {
     if (yes('identifySuppliers')) foodSafety += 1;
     if (yes('batchLotNumbers')) foodSafety += 1;
     if (yes('traceOneStepBackForward')) foodSafety += 1;
+    if (yes('traceToCustomers')) foodSafety += 1;
+
+    // Regulatory / lab validation (0–2 pts)
+    if (yes('testedValidatedApprovedByAuthority')) foodSafety += 2;
+
+    // Cap scores to rubric maxima to keep total percentage in range.
+    core = Math.min(core, 30);
+    foodSafety = Math.min(foodSafety, 25);
 
     // Packaging, Labelling & Shelf Life (20 pts)
     let packLabel = 0;
@@ -171,9 +186,21 @@ export default function ExportReadinessDashboard() {
     if (yes('internationalShipping')) packLabel += 2;
     if (yes('multipleFormats')) packLabel += 1;
     // Labelling (10)
-    const labelFields = ['labelProductName','labelIngredients','labelAllergens','labelNetWeight','labelOrigin','labelStorage','labelBusinessDetails'];
+    const labelFields = [
+      'labelProductName',
+      'labelIngredients',
+      'labelAllergens',
+      'labelNetWeight',
+      'labelOrigin',
+      'labelStorage',
+      'labelBusinessDetails',
+      'labelBatchLotNumber',
+      'labelManufacturingDate',
+      'labelExpiryDate',
+      'labelRegulatoryRegistrationNumber',
+    ];
     const labelYes = labelFields.filter((f) => yes(f)).length;
-    packLabel += Math.min(Math.round((labelYes / 7) * 5), 5);
+    packLabel += Math.min(Math.round((labelYes / labelFields.length) * 5), 5);
     if (yes('labelsInEnglish')) packLabel += 2;
     if (yes('allergenDeclarations')) packLabel += 1;
     if (yes('barcodes')) packLabel += 1;
@@ -316,7 +343,11 @@ export default function ExportReadinessDashboard() {
       });
     }
 
-    if (assessmentData.accreditedLabTesting !== 'yes' || assessmentData.certificateOfAnalysis !== 'yes') {
+    if (
+      assessmentData.accreditedLabTesting !== 'yes' ||
+      assessmentData.certificateOfAnalysis !== 'yes' ||
+      assessmentData.testedValidatedApprovedByAuthority !== 'yes'
+    ) {
       items.push({
         title: 'Complete accredited lab testing and obtain COA',
         category: 'Food Safety',
@@ -326,24 +357,54 @@ export default function ExportReadinessDashboard() {
           'Collect product samples for testing',
           'Submit samples to laboratory',
           'Upload Certificate of Analysis (COA)',
+          'Confirm regulatory / lab validation is complete where required',
         ],
       });
     }
 
-    if (assessmentData.businessRegistered !== 'yes' || assessmentData.businessDocuments !== 'yes') {
+    if (
+      assessmentData.businessRegistered !== 'yes' ||
+      assessmentData.businessDocuments !== 'yes' ||
+      assessmentData.productRegulatoryApproval !== 'yes' ||
+      assessmentData.facilityInspectionApproval !== 'yes' ||
+      (assessmentData.brandTrademarkApproval !== 'yes' && assessmentData.brandTrademarkApproval !== 'not_applicable')
+    ) {
       items.push({
-        title: 'Complete business registration and documentation',
+        title: 'Complete business registration and regulatory approvals',
         category: 'Business & Legal',
         priority: 'High',
         steps: [
           'Register business with relevant authority',
           'Obtain official registration documents',
           'Obtain tax identification number',
+          'Register / approve product with food regulatory authority',
+          'Complete facility inspection and approval',
+          'Register product brand name or trademark (where applicable)',
         ],
       });
     }
 
-    if (assessmentData.labelsInEnglish !== 'yes' || assessmentData.allergenDeclarations !== 'yes') {
+    if (assessmentData.traceToCustomers !== 'yes') {
+      items.push({
+        title: 'Establish end-to-end customer traceability',
+        category: 'Food Safety',
+        priority: 'Medium',
+        steps: [
+          'Maintain records from raw materials to finished goods',
+          'Use batch/lot numbers to identify specific production batches',
+          'Link finished goods to customers / trade partners',
+        ],
+      });
+    }
+
+    if (
+      assessmentData.labelsInEnglish !== 'yes' ||
+      assessmentData.allergenDeclarations !== 'yes' ||
+      assessmentData.labelBatchLotNumber !== 'yes' ||
+      assessmentData.labelManufacturingDate !== 'yes' ||
+      assessmentData.labelExpiryDate !== 'yes' ||
+      assessmentData.labelRegulatoryRegistrationNumber !== 'yes'
+    ) {
       items.push({
         title: 'Update product labels to UK/EU compliance',
         category: 'Labelling',
@@ -352,6 +413,7 @@ export default function ExportReadinessDashboard() {
           'Ensure all labels are in English',
           'Add allergen declarations',
           'Include all required label elements',
+          'Add batch/lot number, manufacturing date, expiry date, and regulatory registration number (if applicable)',
           'Add barcodes (EAN/UPC)',
         ],
       });
@@ -403,13 +465,26 @@ export default function ExportReadinessDashboard() {
           ...currentData,
           accreditedLabTesting: 'yes',
           certificateOfAnalysis: 'yes',
+          testedValidatedApprovedByAuthority: 'yes',
         };
-      case 'Complete business registration and documentation':
+      case 'Complete business registration and regulatory approvals':
         return {
           ...currentData,
           businessRegistered: 'yes',
           businessDocuments: 'yes',
           taxId: 'yes',
+          productRegulatoryApproval: 'yes',
+          facilityInspectionApproval: 'yes',
+          brandTrademarkApproval: 'yes',
+        };
+      case 'Establish end-to-end customer traceability':
+        return {
+          ...currentData,
+          traceRawToFinished: 'yes',
+          identifySuppliers: 'yes',
+          batchLotNumbers: 'yes',
+          traceOneStepBackForward: 'yes',
+          traceToCustomers: 'yes',
         };
       case 'Update product labels to UK/EU compliance':
         return {
@@ -423,6 +498,10 @@ export default function ExportReadinessDashboard() {
           labelOrigin: 'yes',
           labelStorage: 'yes',
           labelBusinessDetails: 'yes',
+          labelBatchLotNumber: 'yes',
+          labelManufacturingDate: 'yes',
+          labelExpiryDate: 'yes',
+          labelRegulatoryRegistrationNumber: 'yes',
           barcodes: 'yes',
         };
       case 'Prepare export-grade packaging':

@@ -8,6 +8,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDefaultPostLoginRoute } from '@/lib/roleRouting';
 
 interface HeaderProps {
   needsBackground?: boolean;
@@ -15,8 +16,9 @@ interface HeaderProps {
 
 function Header({ needsBackground = false }: HeaderProps) {
   const router = useRouter();
-  const { isAuthenticated, logout, loading } = useAuth();
+  const { isAuthenticated, logout, loading, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const dashboardHref = user ? getDefaultPostLoginRoute(user) : '/dashboard';
 
   const handleRouteChange = (route: string) => () => {
     setMobileMenuOpen(false);
@@ -52,11 +54,14 @@ function Header({ needsBackground = false }: HeaderProps) {
           <Link prefetch href='/blog' className={headerLinkClassName}>
             Blog
           </Link>
+          <Link prefetch href='/contact' className={headerLinkClassName}>
+            Contact
+          </Link>
           {!loading && (
             <>
               {isAuthenticated ? (
                 <>
-                  <Link prefetch href='/dashboard' className={`${headerLinkClassName} hover:text-orange transition-colors relative z-10`}>
+                  <Link prefetch href={dashboardHref} className={`${headerLinkClassName} hover:text-orange transition-colors relative z-10`}>
                     Dashboard
                   </Link>
                   <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer border border-white/50 px-4 py-2 rounded hover:bg-white/10 transition-colors relative z-10`}>
@@ -94,11 +99,14 @@ function Header({ needsBackground = false }: HeaderProps) {
             <button onClick={handleRouteChange('/blog')} className={headerMobileClassName}>
               Blog
             </button>
+            <button onClick={handleRouteChange('/contact')} className={headerMobileClassName}>
+              Contact
+            </button>
             {!loading && (
               <>
                 {isAuthenticated ? (
                   <>
-                    <button onClick={handleRouteChange('/dashboard')} className={headerMobileClassName}>
+                    <button onClick={handleRouteChange(dashboardHref)} className={headerMobileClassName}>
                       Dashboard
                     </button>
                     <button onClick={handleLogout} className={headerMobileClassName}>

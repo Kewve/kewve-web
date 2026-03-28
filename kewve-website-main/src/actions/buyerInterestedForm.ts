@@ -11,6 +11,7 @@ export const buyerInterestedForm = async (
   data: FormData
 ) => {
   try {
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
     const parsedData = {
       email: data.get('email')?.toString() || '',
       first_name: data.get('first_name')?.toString() || '',
@@ -35,6 +36,23 @@ export const buyerInterestedForm = async (
         website: parsedData.website,
       }),
     });
+
+    if (ADMIN_EMAIL && ADMIN_EMAIL !== 'kewveplatform@gmail.com') {
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: ADMIN_EMAIL,
+        subject: `Kewve: New ${parsedData.account_type} interest submitted (admin)`,
+        react: FormCompanyInterestTemplate({
+          first_name: parsedData.first_name,
+          last_name: parsedData.last_name,
+          email: parsedData.email,
+          account_type: parsedData.account_type,
+          company_name: parsedData.company_name,
+          phone_number: parsedData.phone_number,
+          website: parsedData.website,
+        }),
+      });
+    }
 
     return {
       message:

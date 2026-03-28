@@ -3,16 +3,32 @@
 import { Resend } from 'resend';
 import { FormProductInquiryTemplate } from '@/templates/ProductInquiryEmail';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Pex2Lpdm_768HkN8gFdEtTXsHaKyuf5Wx';
-const resend = new Resend(RESEND_API_KEY);
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
 
 export const productInquiryAction = async (
   productName: string,
   prevState: { message: string; error: boolean; submitted: boolean },
   data: FormData
 ) => {
-  console.log(productName, data);
   try {
+    if (data.get('gdpr_consent') !== 'on') {
+      return {
+        message: 'Please confirm you understand how we use your information.',
+        error: true,
+        submitted: true,
+      };
+    }
+
+    if (!resend) {
+      return {
+        message: 'This form is temporarily unavailable. Please try again later.',
+        error: true,
+        submitted: true,
+      };
+    }
+
     const parsedData = {
       email: data.get('email')?.toString() || '',
       name: data.get('name')?.toString() || '',
@@ -35,6 +51,18 @@ export const productInquiryAction = async (
         ...parsedData,
       }),
     });
+
+    if (ADMIN_EMAIL && ADMIN_EMAIL !== 'kewveplatform@gmail.com') {
+      await resend.emails.send({
+        from: 'onboarding@resend.dev',
+        to: ADMIN_EMAIL,
+        subject: 'Kewve: Product Inquiry (admin)',
+        react: FormProductInquiryTemplate({
+          productName,
+          ...parsedData,
+        }),
+      });
+    }
 
     return {
       message:

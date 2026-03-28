@@ -1,20 +1,52 @@
 import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 
+export interface SavedDeliveryAddress {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  phone?: string;
+  company?: string;
+}
+
 export interface UserDocument extends Document {
   email: string;
   password: string;
   name: string;
-  role: 'producer' | 'admin';
+  /** @deprecated Prefer `roles`; kept in sync for legacy queries */
+  role: "producer" | "buyer" | "admin";
+  roles: string[];
   businessName?: string;
   country?: string;
+  /** Default delivery details for buyers (sourcing / fulfillment) */
+  savedDeliveryAddress?: SavedDeliveryAddress;
   discountCodeUsed?: string;
+  emailVerified?: boolean;
+  emailVerificationToken?: string;
+  emailVerificationTokenExpiry?: Date;
   resetToken?: string;
   resetTokenExpiry?: Date;
+  /** Stripe Connect account id (acct_...) for producer payouts */
+  stripeConnectAccountId?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
+
+const SavedDeliveryAddressSchema = new Schema(
+  {
+    line1: { type: String, trim: true, default: "" },
+    line2: { type: String, trim: true, default: "" },
+    city: { type: String, trim: true, default: "" },
+    postalCode: { type: String, trim: true, default: "" },
+    country: { type: String, trim: true, default: "" },
+    phone: { type: String, trim: true, default: "" },
+    company: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
 
 const UserSchema = new Schema<UserDocument>(
   {
@@ -30,7 +62,7 @@ const UserSchema = new Schema<UserDocument>(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Don't return password by default
+      select: false,
     },
     name: {
       type: String,
@@ -39,8 +71,17 @@ const UserSchema = new Schema<UserDocument>(
     },
     role: {
       type: String,
-      enum: ["producer", "admin"],
+      enum: ["producer", "buyer", "admin"],
       default: "producer",
+    },
+    roles: {
+      type: [String],
+      validate: {
+        validator: (v: string[]) =>
+          Array.isArray(v) && v.length > 0 && v.every((r) => ["producer", "buyer", "admin"].includes(r)),
+        message: "roles must be one or more of: producer, buyer, admin",
+      },
+      default: undefined,
     },
     businessName: {
       type: String,
@@ -55,6 +96,18 @@ const UserSchema = new Schema<UserDocument>(
       trim: true,
       uppercase: true,
     },
+    emailVerified: {
+      type: Boolean,
+      default: true,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false,
+    },
+    emailVerificationTokenExpiry: {
+      type: Date,
+      select: false,
+    },
     resetToken: {
       type: String,
       select: false,
@@ -63,24 +116,36 @@ const UserSchema = new Schema<UserDocument>(
       type: Date,
       select: false,
     },
+    stripeConnectAccountId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    savedDeliveryAddress: { type: SavedDeliveryAddressSchema },
   },
   {
     timestamps: true,
   }
 );
 
-// Hash password before saving
 UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  const doc = this as UserDocument;
+  if (!doc.roles?.length) {
+    doc.roles = [(doc.role || "producer") as "producer" | "buyer" | "admin"];
+  }
+  const r = doc.roles.map(String);
+  if (r.includes("admin")) doc.role = "admin";
+  else if (r.includes("producer")) doc.role = "producer";
+  else if (r.includes("buyer")) doc.role = "buyer";
+  else doc.role = "producer";
+
+  if (!doc.isModified("password")) return next();
+  doc.password = await bcrypt.hash(doc.password, 12);
   next();
 });
 
-// Compare password method
 UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return await bcrypt.compare(candidatePassword, this.password);
 };
-
-// Note: email index is automatically created by unique: true in the schema
 
 export const User = mongoose.model<UserDocument>("User", UserSchema);

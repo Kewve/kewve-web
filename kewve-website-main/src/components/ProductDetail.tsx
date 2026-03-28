@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import ProductCard from '@/components/ProductCard';
 import { useToast } from '@/components/ui/use-toast';
+import Link from 'next/link';
+import { GDPR } from '@/lib/gdprCopy';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { titleFont, poppinsRegular, josefinSemiBold, josefinRegular } from '@/utils/fonts';
 import type { ProductDocument, ProductDocumentData } from '../../prismicio-types';
@@ -195,6 +197,30 @@ function ProductDetail({ id, product, products }: ProductDetailProps) {
                   <Label htmlFor='request'>Special Request</Label>
                   <Textarea rows={2} name='request' id='request' />
                 </div>
+              </div>
+              <div className='col-span-4'>
+                <label className='flex items-start gap-3 cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    name='gdpr_consent'
+                    required
+                    className='mt-1 h-4 w-4 rounded border-gray-300 accent-orange shrink-0'
+                  />
+                  <span className={`text-xs sm:text-sm text-black/80 ${josefinRegular.className}`}>
+                    {(() => {
+                      const [before, after] = GDPR.contactForm.split('Privacy Policy');
+                      return (
+                        <>
+                          {before}
+                          <Link href='/privacy' className='text-orange underline'>
+                            Privacy Policy
+                          </Link>
+                          {after}
+                        </>
+                      );
+                    })()}
+                  </span>
+                </label>
               </div>
               <button
                 type='submit'

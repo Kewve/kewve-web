@@ -27,9 +27,15 @@ import assessmentRoutes from "./routes/assessmentRoute.js";
 import tradeProfileRoutes from "./routes/tradeProfileRoute.js";
 import productRoutes from "./routes/productRoute.js";
 import adminRoutes from "./routes/adminRoute.js";
+import buyerRequestRoutes from "./routes/buyerRequestRoute.js";
+import stripeConnectRoutes from "./routes/stripeConnectRoute.js";
+import aggregationRoutes from "./routes/aggregationRoute.js";
+import searchRoutes from "./routes/searchRoute.js";
 import { connectDB } from "./config/database.js";
 import mongoose from "mongoose";
+import { runDualRoleMigrations } from "./migrations/dualRoleMigration.js";
 import cors from "cors";
+import { stripeTradeWebhookHandler } from "./handlers/stripeTradeWebhook.js";
 const app = express();
 // CORS configuration - supports multiple origins via comma-separated FRONTEND_URL
 const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
@@ -47,8 +53,6 @@ app.use(cors({
     },
     credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 console.log("MONGODB_URI:", process.env.MONGODB_URI ? "FOUND" : "MISSING");
 console.log("JWT_SECRET:", process.env.JWT_SECRET ? "FOUND" : "MISSING");
 console.log("PORT:", process.env.PORT || 5000);
@@ -58,6 +62,13 @@ async function startServer() {
     try {
         await connectDB();
         console.log("✅ Database connection established");
+        await runDualRoleMigrations();
+        // Stripe webhooks need raw body — must run before express.json()
+        app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), (req, res) => {
+            void stripeTradeWebhookHandler(req, res);
+        });
+        app.use(express.json());
+        app.use(express.urlencoded({ extended: true }));
         // health check
         app.get("/health", (_req, res) => {
             res.json({
@@ -92,9 +103,16 @@ async function startServer() {
         app.use("/api", adminRoutes);
         app.use("/api", waitlistRoutes);
         app.use("/api/auth", authRoutes);
+        // Keep admin-token and mixed-role routes BEFORE assessmentRoutes.
+        // assessmentRoutes applies authenticate() at router level and would
+        // reject admin tokens for unrelated endpoints if mounted first.
+        app.use("/api", aggregationRoutes);
         app.use("/api", assessmentRoutes);
         app.use("/api", tradeProfileRoutes);
         app.use("/api", productRoutes);
+        app.use("/api", searchRoutes);
+        app.use("/api", buyerRequestRoutes);
+        app.use("/api", stripeConnectRoutes);
         app.listen(PORT, () => {
             console.log(`🚀 Backend running on http://localhost:${PORT}`);
         });

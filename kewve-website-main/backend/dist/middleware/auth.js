@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
-// Get JWT_SECRET lazily to allow dotenv.config() to run first
+import { userHasRole } from "../utils/userRoles.js";
 const getJwtSecret = () => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -45,7 +45,7 @@ export const authenticate = async (req, res, next) => {
     }
 };
 export const requireAdmin = async (req, res, next) => {
-    if (!req.user || req.user.role !== 'admin') {
+    if (!req.user || !userHasRole(req.user, "admin")) {
         res.status(403).json({
             success: false,
             message: "Admin access required.",

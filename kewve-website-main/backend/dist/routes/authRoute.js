@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { register, login, getCurrentUser, updateProfile, forgotPassword, resetPassword } from "../controllers/authController.js";
+import { register, login, getCurrentUser, updateProfile, forgotPassword, resetPassword, verifyEmail, upgradeBuyerFromPayment, enableBuyerRole, } from "../controllers/authController.js";
 import { authenticate } from "../middleware/auth.js";
 import { User } from "../models/User.js";
 const router = Router();
-// Check if email is already registered (no auth required)
 router.post("/check-email", async (req, res) => {
     try {
         const { email } = req.body;
@@ -11,7 +10,8 @@ router.post("/check-email", async (req, res) => {
             res.status(400).json({ success: false, message: "Email is required" });
             return;
         }
-        const exists = await User.exists({ email: email.toLowerCase().trim() });
+        const normalizedEmail = email.toLowerCase().trim();
+        const exists = await User.exists({ email: normalizedEmail });
         res.json({ success: true, data: { exists: !!exists } });
     }
     catch (error) {
@@ -20,9 +20,12 @@ router.post("/check-email", async (req, res) => {
     }
 });
 router.post("/register", register);
+router.post("/upgrade-buyer-from-payment", upgradeBuyerFromPayment);
 router.post("/login", login);
+router.post("/verify-email", verifyEmail);
 router.get("/me", authenticate, getCurrentUser);
 router.put("/profile", authenticate, updateProfile);
+router.post("/enable-buyer-role", authenticate, enableBuyerRole);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 export default router;

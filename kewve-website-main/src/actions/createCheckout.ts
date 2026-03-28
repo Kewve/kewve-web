@@ -1,6 +1,7 @@
 'use server';
 
 import Stripe from 'stripe';
+import { computeAssessmentPricing, getApiUrl, type PricingComputation } from '@/lib/assessmentPricing';
 
 interface RegistrationData {
   name: string;
@@ -11,85 +12,18 @@ interface RegistrationData {
   discountCode?: string;
 }
 
-interface PricingComputation {
-  standardAmountCents: number;
-  baseAmountBeforeDiscount: number;
-  finalAmount: number;
-  totalDiscountAmount: number;
-  earlyBirdDiscountAmount: number;
-  promoDiscountAmount: number;
-  normalizedDiscountCode: string;
-  pricingTier: string;
-}
-
-const STANDARD_ASSESSMENT_PRICE_FALLBACK = 10000;
-
-const getApiUrl = () => {
-  const apiUrlRaw = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000/api';
-  return apiUrlRaw.endsWith('/api') ? apiUrlRaw : `${apiUrlRaw}/api`;
-};
-
-const computePricing = async (discountCode?: string): Promise<PricingComputation> => {
-  const apiUrl = getApiUrl();
-  const standardAmountCents = parseInt(process.env.ASSESSMENT_PRICE_CENTS || String(STANDARD_ASSESSMENT_PRICE_FALLBACK), 10);
-
-  let baseAmountBeforeDiscount = standardAmountCents;
-  let pricingTier = 'standard';
-  try {
-    const tierRes = await fetch(`${apiUrl}/pricing/assessment-tier`, { method: 'GET' });
-    const tierData = await tierRes.json();
-    if (tierRes.ok && tierData?.success && Number(tierData?.data?.unitAmountCents) > 0) {
-      baseAmountBeforeDiscount = Number(tierData.data.unitAmountCents);
-      pricingTier = String(tierData.data.tierLabel || 'standard');
-    }
-  } catch {
-    // fallback to standard amount
-  }
-
-  let promoDiscountAmount = 0;
-  let normalizedDiscountCode = '';
-  if (discountCode?.trim()) {
-    normalizedDiscountCode = discountCode.trim().toUpperCase();
-    const validateRes = await fetch(`${apiUrl}/discount-codes/validate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: normalizedDiscountCode }),
-    });
-    const validateData = await validateRes.json();
-    if (!validateRes.ok || !validateData.success) {
-      throw new Error('Invalid or inactive discount code.');
-    }
-    const discountPercent = Number(validateData?.data?.discountPercent || 15);
-    promoDiscountAmount = Math.round((baseAmountBeforeDiscount * discountPercent) / 100);
-  }
-
-  const finalAmount = Math.max(0, baseAmountBeforeDiscount - promoDiscountAmount);
-  const totalDiscountAmount = Math.max(0, standardAmountCents - finalAmount);
-  const earlyBirdDiscountAmount = Math.max(0, standardAmountCents - baseAmountBeforeDiscount);
-
-  return {
-    standardAmountCents,
-    baseAmountBeforeDiscount,
-    finalAmount,
-    totalDiscountAmount,
-    earlyBirdDiscountAmount,
-    promoDiscountAmount,
-    normalizedDiscountCode,
-    pricingTier,
-  };
-};
-
 export async function getCheckoutPricingPreview(discountCode?: string) {
   try {
-    const pricing = await computePricing(discountCode);
+    const pricing = await computeAssessmentPricing(discountCode);
     return {
       success: true,
       data: pricing,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unable to calculate pricing preview.';
     return {
       success: false,
-      error: error?.message || 'Unable to calculate pricing preview.',
+      error: message,
     };
   }
 }
@@ -104,7 +38,6 @@ export async function createCheckoutSession(registrationData: RegistrationData) 
       return { error: 'Payment system is not configured. Please contact support.' };
     }
 
-    // Check if email already exists before charging
     if (apiUrl) {
       try {
         const checkRes = await fetch(`${apiUrl}/auth/check-email`, {
@@ -123,16 +56,16 @@ export async function createCheckoutSession(registrationData: RegistrationData) 
 
     let pricing: PricingComputation;
     try {
-      pricing = await computePricing(registrationData.discountCode);
-    } catch (error: any) {
-      return { error: error?.message || 'Unable to validate discount code at the moment.' };
+      pricing = await computeAssessmentPricing(registrationData.discountCode);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unable to validate discount code at the moment.';
+      return { error: message };
     }
     const {
       standardAmountCents,
       baseAmountBeforeDiscount,
       finalAmount,
       totalDiscountAmount,
-      earlyBirdDiscountAmount,
       promoDiscountAmount,
       normalizedDiscountCode,
       pricingTier,
@@ -141,14 +74,11 @@ export async function createCheckoutSession(registrationData: RegistrationData) 
 
     let couponId: string | undefined;
     if (hasVisibleDiscount) {
-      const discountParts: string[] = [];
-      if (earlyBirdDiscountAmount > 0) discountParts.push('early-bird');
-      if (promoDiscountAmount > 0) discountParts.push('discount code');
       const coupon = await stripe.coupons.create({
         duration: 'once',
         amount_off: totalDiscountAmount,
         currency: 'eur',
-        name: `Assessment ${discountParts.join(' + ') || 'discount'}`.trim(),
+        name: promoDiscountAmount > 0 ? 'Assessment discount code' : 'Assessment discount',
       });
       couponId = coupon.id;
     }
@@ -189,7 +119,7 @@ export async function createCheckoutSession(registrationData: RegistrationData) 
     });
 
     return { url: session.url };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Stripe checkout error:', err);
     return { error: 'Unable to initiate payment. Please try again.' };
   }

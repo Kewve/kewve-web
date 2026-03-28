@@ -18,7 +18,6 @@ interface PricingPreviewData {
   standardAmountCents: number;
   baseAmountBeforeDiscount: number;
   finalAmount: number;
-  earlyBirdDiscountAmount: number;
   promoDiscountAmount: number;
 }
 
@@ -113,12 +112,6 @@ function ConfirmEmailContent() {
                     <p className={`text-sm text-black mb-2 ${josefinSemiBold.className}`}>Price preview</p>
                     <div className={`space-y-1 text-xs text-black/80 ${josefinRegular.className}`}>
                       <p>Base fee: {formatEuro(pricingPreview.standardAmountCents)}</p>
-                      <p>
-                        Early-bird discount:{' '}
-                        {pricingPreview.earlyBirdDiscountAmount > 0
-                          ? `-${formatEuro(pricingPreview.earlyBirdDiscountAmount)}`
-                          : '€0.00'}
-                      </p>
                       <p>
                         Discount code discount:{' '}
                         {pricingPreview.promoDiscountAmount > 0 ? `-${formatEuro(pricingPreview.promoDiscountAmount)}` : '€0.00'}

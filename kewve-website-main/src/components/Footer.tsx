@@ -2,7 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import React from 'react';
 import { Josefin_Sans } from 'next/font/google';
-
 const josefin = Josefin_Sans({ weight: '500', subsets: ['latin'] });
 
 function Footer() {
@@ -17,14 +16,28 @@ function Footer() {
           </div>
         </div>
         <div className='flex flex-col lg:flex-row items-center justify-center gap-x-16 gap-y-3 my-8'>
+          <Link href='/buyers' className={footerLinkClassName}>
+            For Buyers
+          </Link>
           <Link href='/terms' className={footerLinkClassName}>
             Terms & Conditions
           </Link>
           <Link href='/privacy' className={footerLinkClassName}>
             Privacy Policy
           </Link>
-          
+          <Link href='/contact' className={footerLinkClassName}>
+            Contact
+          </Link>
         </div>
+        <p className={`text-xs text-center text-white/80 mb-6 ${josefin.className}`}>
+          <Link href='/privacy' className='underline hover:text-white'>
+            Privacy Policy
+          </Link>
+          <span className='mx-2 opacity-70'>|</span>
+          <Link href='/terms' className='underline hover:text-white'>
+            Terms of Use
+          </Link>
+        </p>
         <div className='flex justify-between items-center'>
           <span className={`text-sm lg:text-base text-white ${josefin.className}`}>
             &copy; KEWVE {new Date().getFullYear()}

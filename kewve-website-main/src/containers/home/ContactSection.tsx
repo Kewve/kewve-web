@@ -1,16 +1,16 @@
 'use client';
 
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useFormState, useFormStatus } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import Link from 'next/link';
 import { formSubmissionAction } from '@/actions';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
+import { GDPR } from '@/lib/gdprCopy';
+import { titleFont, josefinRegular, josefinSemiBold, cn } from '@/utils';
 import { redirect } from 'next/navigation';
 import { HomePageDocumentData } from '../../../prismicio-types';
 import { PrismicNextImage, PrismicNextLink } from '@prismicio/next';
@@ -18,6 +18,7 @@ import { PrismicNextImage, PrismicNextLink } from '@prismicio/next';
 function ContactSection({ content }: { content: HomePageDocumentData }) {
   const { toast } = useToast();
   const { pending } = useFormStatus();
+  const formRef = useRef<HTMLFormElement>(null);
   const [state, action] = useFormState(formSubmissionAction, { message: '', error: false, submitted: false });
 
   useEffect(() => {
@@ -27,6 +28,7 @@ function ContactSection({ content }: { content: HomePageDocumentData }) {
     }
 
     if (state.submitted && !state.error) {
+      formRef.current?.reset();
       toast({ title: 'Yahoo!', description: state.message });
       redirect('/');
     }
@@ -73,26 +75,38 @@ function ContactSection({ content }: { content: HomePageDocumentData }) {
             })}
           </div>
           <div className='col-span-6 lg:col-span-4 mt-6 lg:mt-0'>
-            <form action={action} className='grid grid-cols-4 gap-4'>
+            <form ref={formRef} action={action} className='grid grid-cols-4 gap-4'>
               <div className='col-span-4'>
-                <h4 className={`text-lg text-black mb-1 ${titleFont.className}`}>I am interested as?</h4>
-                <RadioGroup name='account_type' defaultValue='buyer' required>
-                  <div className='flex flex-wrap gap-4'>
-                    <div className='flex flex-shrink-0 items-center space-x-2 cursor-pointer'>
-                      <RadioGroupItem value='buyer' id='buyer' />
-                      <Label htmlFor='buyer'>Buyer</Label>
-                    </div>
-                    <div className='flex flex-shrink-0 items-center space-x-2 cursor-pointer'>
-                      <RadioGroupItem value='supplier' id='supplier' />
-                      <Label htmlFor='supplier'>Supplier</Label>
-                    </div>
-                  </div>
-                </RadioGroup>
+                <div className='flex flex-col gap-2'>
+                  <Label htmlFor='account_type'>I&apos;m interested as</Label>
+                  <select
+                    id='account_type'
+                    name='account_type'
+                    required
+                    defaultValue=''
+                    className={cn(
+                      'flex h-10 w-full rounded-md border border-black bg-transparent px-3 py-2 text-black text-sm ring-offset-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2',
+                      josefinRegular.className
+                    )}
+                  >
+                    <option value='' disabled>
+                      Select buyer or producer
+                    </option>
+                    <option value='buyer'>Buyer</option>
+                    <option value='producer'>Producer</option>
+                  </select>
+                </div>
               </div>
               <div className='col-span-4'>
                 <div className='flex flex-col gap-2'>
                   <Label htmlFor='email'>Email</Label>
                   <Input type='email' name='email' id='email' placeholder='john@email.com' required />
+                </div>
+              </div>
+              <div className='col-span-4'>
+                <div className='flex flex-col gap-2'>
+                  <Label htmlFor='phone'>Phone number</Label>
+                  <Input type='tel' name='phone' id='phone' placeholder='+44 7700 900000' autoComplete='tel' />
                 </div>
               </div>
               <div className='col-span-4 lg:col-span-2'>
@@ -118,6 +132,30 @@ function ContactSection({ content }: { content: HomePageDocumentData }) {
                   <Label htmlFor='country'>Country/Region</Label>
                   <Input type='text' name='country' id='country' placeholder='Great Britain' />
                 </div>
+              </div>
+              <div className='col-span-4'>
+                <label className='flex items-start gap-3 cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    name='gdpr_consent'
+                    required
+                    className='mt-1 h-4 w-4 rounded border-gray-600 text-orange focus:ring-orange accent-orange shrink-0'
+                  />
+                  <span className={`text-xs sm:text-sm text-black/80 leading-snug ${josefinRegular.className}`}>
+                    {(() => {
+                      const [before, after] = GDPR.contactForm.split('Privacy Policy');
+                      return (
+                        <>
+                          {before}
+                          <Link href='/privacy' className='text-orange underline hover:opacity-80'>
+                            Privacy Policy
+                          </Link>
+                          {after}
+                        </>
+                      );
+                    })()}
+                  </span>
+                </label>
               </div>
               <button
                 type='submit'
