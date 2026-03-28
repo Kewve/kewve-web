@@ -85,6 +85,7 @@ const UserSchema = new Schema({
     timestamps: true,
 });
 UserSchema.pre("save", async function (next) {
+    // Avoid TS2590 ("union type too complex") from `this` in Mongoose middleware typings.
     const doc = this;
     if (!doc.roles?.length) {
         doc.roles = [(doc.role || "producer")];

@@ -129,7 +129,8 @@ const UserSchema = new Schema<UserDocument>(
 );
 
 UserSchema.pre("save", async function (next) {
-  const doc = this as UserDocument;
+  // Avoid TS2590 ("union type too complex") from `this` in Mongoose middleware typings.
+  const doc = this as unknown as UserDocument;
   if (!doc.roles?.length) {
     doc.roles = [(doc.role || "producer") as "producer" | "buyer" | "admin"];
   }
