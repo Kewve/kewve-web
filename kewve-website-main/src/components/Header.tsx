@@ -61,7 +61,7 @@ function Header({ needsBackground = false }: HeaderProps) {
             <>
               {isAuthenticated ? (
                 <>
-                  <Link prefetch href={dashboardHref} className={`${headerLinkClassName} hover:text-orange transition-colors relative z-10`}>
+                  <Link prefetch href={dashboardHref} className={`${headerLinkClassName} transition-colors relative z-10`}>
                     Dashboard
                   </Link>
                   <button onClick={handleLogout} className={`${headerLinkClassName} cursor-pointer border border-white/50 px-4 py-2 rounded hover:bg-white/10 transition-colors relative z-10`}>
