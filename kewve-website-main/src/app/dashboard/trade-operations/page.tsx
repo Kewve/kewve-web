@@ -1160,6 +1160,14 @@ function DetailPipeline({ row, uid }: { row: any; uid: string }) {
             </p>
           </div>
         ) : null}
+        {String(row.otherInformation || '').trim() ? (
+          <div className='border border-sky-100 rounded-lg p-3 space-y-1.5 bg-sky-50/50'>
+            <p className={`text-gray-900 ${josefinSemiBold.className}`}>Buyer additional information</p>
+            <p className={`text-sm text-gray-800 whitespace-pre-wrap break-all ${josefinRegular.className}`}>
+              {String(row.otherInformation)}
+            </p>
+          </div>
+        ) : null}
         <div className='border border-gray-100 rounded-lg p-3 space-y-1 bg-gray-50/80'>
           <p className={josefinSemiBold.className}>Invoice</p>
           {inv?.sentAt ? (

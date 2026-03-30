@@ -25,6 +25,7 @@ interface RequestRow {
   market: string;
   timeline: string;
   packagingFormat?: string;
+  otherInformation?: string;
   status: string;
   fulfillmentMode?: 'single' | 'aggregation';
   matchedProducerCount?: number;
@@ -59,11 +60,13 @@ export default function BuyerRequestsPage() {
     market: '',
     timeline: '',
     packagingFormat: '',
+    otherInformation: '',
   });
   const [delivery, setDelivery] = useState(emptyDelivery);
   const [useSavedAddress, setUseSavedAddress] = useState(false);
   const [prefillApplied, setPrefillApplied] = useState(false);
   const [gdprSourcingConsent, setGdprSourcingConsent] = useState(false);
+  const [infoPreviewForId, setInfoPreviewForId] = useState<string | null>(null);
 
   const hasRows = useMemo(() => rows.length > 0, [rows]);
 
@@ -80,6 +83,7 @@ export default function BuyerRequestsPage() {
         market: item.market || '-',
         timeline: item.timeline || '-',
         packagingFormat: item.packagingFormat || '',
+        otherInformation: item.otherInformation || '',
         status: item.status || 'pending',
         fulfillmentMode: item.fulfillmentMode,
         matchedProducerCount: Number(item?.matchPlan?.matchedProducerCount || 0),
@@ -190,6 +194,7 @@ export default function BuyerRequestsPage() {
         market: form.market,
         timeline: form.timeline,
         packagingFormat: form.packagingFormat,
+        otherInformation: form.otherInformation,
         deliveryAddress: d,
       });
 
@@ -208,6 +213,7 @@ export default function BuyerRequestsPage() {
               volumeKg: form.volume,
               market: form.market,
               timeline: form.timeline,
+              otherInformation: form.otherInformation,
               deliveryCountry: d.country,
             },
           }),
@@ -224,6 +230,7 @@ export default function BuyerRequestsPage() {
         market: '',
         timeline: '',
         packagingFormat: '',
+        otherInformation: '',
       });
       setDelivery(emptyDelivery);
       setUseSavedAddress(false);
@@ -261,12 +268,15 @@ export default function BuyerRequestsPage() {
       </div>
 
       <div className='bg-white rounded-xl border border-gray-500/50 overflow-hidden'>
-        <div className={`grid grid-cols-8 px-4 py-3 text-sm text-gray-500 border-b border-gray-200 ${josefinSemiBold.className}`}>
+        <div
+          className={`grid px-4 py-3 text-sm text-gray-500 border-b border-gray-200 ${josefinSemiBold.className}`}
+          style={{ gridTemplateColumns: '1fr 1fr 0.9fr 0.8fr 0.7fr 1.6fr 1fr 0.8fr 0.8fr' }}>
           <p>Product</p>
           <p>Category</p>
           <p>Volume</p>
           <p>Market</p>
           <p>Timeline</p>
+          <p>Other info</p>
           <p>Matching</p>
           <p>Status</p>
           <p>Actions</p>
@@ -279,12 +289,32 @@ export default function BuyerRequestsPage() {
         ) : hasRows ? (
           <div className='divide-y divide-gray-100'>
             {rows.map((r) => (
-              <div key={r.id} className={`grid grid-cols-8 px-4 py-3 text-sm text-gray-700 ${josefinRegular.className}`}>
+              <div
+                key={r.id}
+                className={`grid px-4 py-3 text-sm text-gray-700 ${josefinRegular.className}`}
+                style={{ gridTemplateColumns: '1fr 1fr 0.9fr 0.8fr 0.7fr 1.6fr 1fr 0.8fr 0.8fr' }}>
                 <p>{r.productName || '-'}</p>
                 <p>{r.category}</p>
                 <p>{r.volume}</p>
                 <p>{r.market}</p>
                 <p>{r.timeline}</p>
+                <div className='min-w-0 pr-3'>
+                  {String(r.otherInformation || '').trim() ? (
+                    <>
+                      <p className='truncate' title={r.otherInformation || ''}>
+                        {r.otherInformation}
+                      </p>
+                      <button
+                        type='button'
+                        onClick={() => setInfoPreviewForId(r.id)}
+                        className='mt-1 text-xs text-orange hover:underline'>
+                        View full
+                      </button>
+                    </>
+                  ) : (
+                    <p>-</p>
+                  )}
+                </div>
                 <p className='capitalize'>
                   {r.fulfillmentMode || '-'}
                   {r.matchedProducerCount ? ` (${r.matchedProducerCount})` : ''}
@@ -407,6 +437,17 @@ export default function BuyerRequestsPage() {
                   className={`w-full mt-1 border border-gray-300 rounded px-3 py-2 ${josefinRegular.className}`}
                 />
               </div>
+              <div>
+                <label className={`text-sm text-gray-700 ${josefinSemiBold.className}`}>Other Information</label>
+                <textarea
+                  value={form.otherInformation}
+                  onChange={(e) => setForm((p) => ({ ...p, otherInformation: e.target.value }))}
+                  maxLength={2000}
+                  rows={4}
+                  placeholder='Add any extra request details the producer and Kewve ops should know.'
+                  className={`w-full mt-1 border border-gray-300 rounded px-3 py-2 ${josefinRegular.className}`}
+                />
+              </div>
 
               <div className='border-t border-gray-200 pt-3 mt-1'>
                 <p className={`text-sm text-gray-800 mb-2 ${josefinSemiBold.className}`}>Delivery address</p>
@@ -506,6 +547,28 @@ export default function BuyerRequestsPage() {
           </div>
         </div>
       )}
+
+      {infoPreviewForId ? (
+        <div className='fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4'>
+          <div className='w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-lg'>
+            <div className='flex items-center justify-between border-b border-gray-100 px-4 py-3'>
+              <h3 className={`text-lg text-gray-900 ${josefinSemiBold.className}`}>Other information</h3>
+              <button
+                type='button'
+                onClick={() => setInfoPreviewForId(null)}
+                className='rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800'
+                aria-label='Close'>
+                <X className='h-5 w-5' />
+              </button>
+            </div>
+            <div className='px-4 py-3 max-h-[55vh] overflow-y-auto'>
+              <p className={`text-sm text-gray-800 whitespace-pre-wrap ${josefinRegular.className}`}>
+                {rows.find((r) => r.id === infoPreviewForId)?.otherInformation || '-'}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

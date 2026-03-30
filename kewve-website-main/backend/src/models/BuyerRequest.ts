@@ -133,6 +133,7 @@ export interface BuyerRequestDocument extends Document {
   market: string;
   timeline: string;
   packagingFormat?: string;
+  otherInformation?: string;
   deliveryAddress?: BuyerRequestDeliveryAddress;
   status: BuyerRequestStatus;
   fulfillmentMode?: BuyerRequestFulfillmentMode;
@@ -274,6 +275,7 @@ const BuyerRequestSchema = new Schema<BuyerRequestDocument>(
     market: { type: String, required: true, trim: true },
     timeline: { type: String, required: true, trim: true },
     packagingFormat: { type: String, trim: true, default: "" },
+    otherInformation: { type: String, trim: true, default: "", maxlength: 2000 },
     deliveryAddress: { type: DeliveryAddressSchema },
     status: {
       type: String,
