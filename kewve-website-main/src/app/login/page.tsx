@@ -119,34 +119,39 @@ function LoginForm() {
               </span>
             </div>
             <p className={`text-sm text-black/70 mb-4 ${josefinRegular.className}`}>{copy.subtitle}</p>
-            <p className={`text-xs text-black/50 mb-6 ${josefinRegular.className}`}>
+            <div className={`mb-6 ${josefinRegular.className}`}>
               {loginContext === 'buyer' ? (
-                <>
+                <p className='text-xs text-black/50'>
                   Need the producer dashboard instead?{' '}
                   <Link href='/login?redirect=/dashboard' className='text-orange font-semibold hover:underline'>
                     Use producer login
                   </Link>
-                </>
+                </p>
               ) : loginContext === 'producer' ? (
-                <>
+                <p className='text-xs text-black/50'>
                   Here for sourcing as a buyer?{' '}
                   <Link href='/login?redirect=/buyer' className='text-orange font-semibold hover:underline'>
                     Use buyer login
                   </Link>
-                </>
+                </p>
               ) : (
-                <>
-                  <span className={`${josefinSemiBold.className} text-black/60`}>Choose where you’re headed:</span>{' '}
-                  <Link href='/login?redirect=/buyer' className='text-orange font-semibold hover:underline'>
-                    Buyer login
-                  </Link>
-                  {' · '}
-                  <Link href='/login?redirect=/dashboard' className='text-orange font-semibold hover:underline'>
-                    Producer login
-                  </Link>
-                </>
+                <div className='space-y-2.5'>
+                  <p className={`text-sm text-black/70 ${josefinSemiBold.className}`}>Choose where you’re headed:</p>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                    <Link
+                      href='/login?redirect=/buyer'
+                      className={`inline-flex items-center justify-center rounded-lg border border-orange/40 bg-orange/10 px-4 py-2.5 text-sm text-orange hover:bg-orange/15 transition-colors ${josefinSemiBold.className}`}>
+                      Buyer login
+                    </Link>
+                    <Link
+                      href='/login?redirect=/dashboard'
+                      className={`inline-flex items-center justify-center rounded-lg border border-orange/40 bg-orange/10 px-4 py-2.5 text-sm text-orange hover:bg-orange/15 transition-colors ${josefinSemiBold.className}`}>
+                      Producer login
+                    </Link>
+                  </div>
+                </div>
               )}
-            </p>
+            </div>
 
             <form onSubmit={handleSubmit} className='space-y-6'>
               <div>
@@ -195,27 +200,35 @@ function LoginForm() {
               .
             </p>
 
-            <p className={`text-sm text-center mt-6 text-black/70 ${josefinRegular.className}`}>
-              Don&apos;t have an account?{' '}
+            <div className={`mt-6 text-center ${josefinRegular.className}`}>
+              <p className='text-sm text-black/70 mb-2'>Don&apos;t have an account?</p>
               {loginContext === 'buyer' ? (
-                <Link href='/buyers/register' className='text-black font-semibold hover:underline'>
+                <Link
+                  href='/buyers/register'
+                  className={`inline-flex items-center justify-center rounded-lg border border-black/20 bg-black/5 px-4 py-2 text-sm text-black hover:bg-black/10 transition-colors ${josefinSemiBold.className}`}>
                   Register as a buyer
                 </Link>
-              ) : (
-                <Link href='/register' className='text-black font-semibold hover:underline'>
+              ) : loginContext === 'producer' ? (
+                <Link
+                  href='/register'
+                  className={`inline-flex items-center justify-center rounded-lg border border-black/20 bg-black/5 px-4 py-2 text-sm text-black hover:bg-black/10 transition-colors ${josefinSemiBold.className}`}>
                   Register as a producer
                 </Link>
-              )}
-              {loginContext === 'general' && (
-                <>
-                  {' '}
-                  or{' '}
-                  <Link href='/buyers/register' className='text-black font-semibold hover:underline'>
-                    as a buyer
+              ) : (
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                  <Link
+                    href='/register'
+                    className={`inline-flex items-center justify-center rounded-lg border border-black/20 bg-black/5 px-4 py-2 text-sm text-black hover:bg-black/10 transition-colors ${josefinSemiBold.className}`}>
+                    Register as a producer
                   </Link>
-                </>
+                  <Link
+                    href='/buyers/register'
+                    className={`inline-flex items-center justify-center rounded-lg border border-black/20 bg-black/5 px-4 py-2 text-sm text-black hover:bg-black/10 transition-colors ${josefinSemiBold.className}`}>
+                    Register as a buyer
+                  </Link>
+                </div>
               )}
-            </p>
+            </div>
           </div>
         </div>
       </div>
