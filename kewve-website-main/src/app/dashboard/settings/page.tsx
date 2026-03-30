@@ -150,25 +150,42 @@ function DashboardSettingsContent() {
     }
   };
 
+  const connectComingSoonToast = (description: string) => {
+    toast({
+      title: 'Coming soon',
+      description,
+    });
+  };
+
   const handleConnectPayouts = async () => {
     setConnecting(true);
     try {
       const res = await authAPI.stripeConnectStart();
       if (!res.success || !res.url) {
-        toast({
-          title: 'Could not start Connect',
-          description: res.message || 'Check that Stripe is configured and you are logged in as a producer.',
-          variant: 'destructive',
-        });
+        const msg = res.message || 'Check that Stripe is configured and you are logged in as a producer.';
+        if (/coming soon/i.test(msg)) {
+          connectComingSoonToast(msg);
+        } else {
+          toast({
+            title: 'Could not start Connect',
+            description: msg,
+            variant: 'destructive',
+          });
+        }
         return;
       }
       window.location.href = res.url;
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to open Stripe onboarding.',
-        variant: 'destructive',
-      });
+      const msg = error?.message || 'Failed to open Stripe onboarding.';
+      if (/coming soon/i.test(msg)) {
+        connectComingSoonToast(msg);
+      } else {
+        toast({
+          title: 'Error',
+          description: msg,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setConnecting(false);
     }
