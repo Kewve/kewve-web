@@ -28,6 +28,14 @@ function stripeConnectAccountNotOnThisPlatformError(err) {
 function stripeConnectShouldResetStoredAccountAfterLinkError(err) {
     return stripeConnectModeMismatchError(err) || stripeConnectAccountNotOnThisPlatformError(err);
 }
+/** Platform Stripe account has not enabled Connect in the Dashboard — producers must not see Stripe’s admin copy. */
+function stripeConnectPlatformNotEnabledError(err) {
+    const msg = stripeErrorMessage(err).toLowerCase();
+    return (msg.includes("signed up for connect") ||
+        msg.includes("dashboard.stripe.com/connect") ||
+        (msg.includes("create new accounts") && msg.includes("connect")));
+}
+const STRIPE_CONNECT_COMING_SOON_USER_MESSAGE = "Payout setup is coming soon. We're not able to link bank accounts just yet - please check back later.";
 async function createExpressAccountAndSave(stripe, user) {
     const country = (process.env.STRIPE_CONNECT_DEFAULT_COUNTRY || "GB").trim().toUpperCase();
     if (!/^[A-Z]{2}$/.test(country)) {
@@ -111,6 +119,13 @@ router.post("/stripe/connect", authenticate, async (req, res) => {
     }
     catch (error) {
         console.error("Stripe Connect onboarding error:", error);
+        if (stripeConnectPlatformNotEnabledError(error)) {
+            res.status(503).json({
+                success: false,
+                message: STRIPE_CONNECT_COMING_SOON_USER_MESSAGE,
+            });
+            return;
+        }
         res.status(500).json({
             success: false,
             message: error?.message || "Failed to start Stripe Connect onboarding.",
