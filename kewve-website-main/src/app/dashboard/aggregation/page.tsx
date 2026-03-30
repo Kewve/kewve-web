@@ -119,7 +119,7 @@ export default function AggregationPage() {
           <Link href='/dashboard/settings' className='text-brand-green font-semibold underline underline-offset-2'>
             Settings → Profile
           </Link>{' '}
-          so we can match you to supply regions. It saves to your account and persists after refresh.
+          so we can match you to supply regions.
         </div>
       ) : null}
 
