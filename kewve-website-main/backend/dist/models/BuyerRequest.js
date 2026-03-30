@@ -99,6 +99,7 @@ const BuyerRequestSchema = new Schema({
     market: { type: String, required: true, trim: true },
     timeline: { type: String, required: true, trim: true },
     packagingFormat: { type: String, trim: true, default: "" },
+    otherInformation: { type: String, trim: true, default: "", maxlength: 2000 },
     deliveryAddress: { type: DeliveryAddressSchema },
     status: {
         type: String,

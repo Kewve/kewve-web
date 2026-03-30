@@ -41,6 +41,7 @@ interface AdminBuyerRequest {
   category?: string;
   volumeKg?: number;
   market?: string;
+  otherInformation?: string;
   status?: string;
   trade?: Record<string, any>;
   fulfillmentMode?: 'single' | 'aggregation';
@@ -928,6 +929,14 @@ export default function TradeOperationsPage() {
                 <p>
                   <span className='text-gray-500'>Delivery:</span> {formatDelivery(detailsRow.deliveryAddress)}
                 </p>
+              ) : null}
+              {String(detailsRow.otherInformation || '').trim() ? (
+                <div className='rounded border border-sky-100 bg-sky-50/50 p-2 text-sm'>
+                  <span className={`text-xs text-gray-500 block mb-0.5 ${josefinSemiBold.className}`}>
+                    Buyer additional information
+                  </span>
+                  <p className='text-gray-800 whitespace-pre-wrap break-all'>{String(detailsRow.otherInformation)}</p>
+                </div>
               ) : null}
               <div className='border-t border-gray-200 pt-2 mt-2'>
                 <p className={`text-xs font-semibold text-gray-700 mb-1 ${josefinSemiBold.className}`}>Payment (invoice)</p>

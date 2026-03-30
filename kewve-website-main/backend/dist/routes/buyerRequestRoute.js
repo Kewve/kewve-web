@@ -69,7 +69,7 @@ router.post("/buyer-requests", authenticate, async (req, res) => {
             res.status(403).json({ success: false, message: "Only buyers can create product requests." });
             return;
         }
-        const { productId, volumeKg, market, timeline, packagingFormat } = req.body || {};
+        const { productId, volumeKg, market, timeline, packagingFormat, otherInformation } = req.body || {};
         if (!productId || !volumeKg || !market || !timeline) {
             res.status(400).json({ success: false, message: "productId, volumeKg, market and timeline are required." });
             return;
@@ -116,6 +116,7 @@ router.post("/buyer-requests", authenticate, async (req, res) => {
             market: String(market),
             timeline: String(timeline),
             packagingFormat: String(packagingFormat || ""),
+            otherInformation: String(otherInformation || "").trim().slice(0, 2000),
             deliveryAddress: deliveryParsed.value,
             status: canSingleSupply ? "matched" : "pending",
             fulfillmentMode: canSingleSupply ? "single" : "aggregation",

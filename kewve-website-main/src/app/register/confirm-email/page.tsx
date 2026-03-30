@@ -53,7 +53,7 @@ function ConfirmEmailContent() {
       }
 
       setEmail(validationResult.data?.email || '');
-      if (previewResult.success && previewResult.data) {
+      if (previewResult.success && 'data' in previewResult && previewResult.data) {
         setPricingPreview(previewResult.data as PricingPreviewData);
       }
       setStatus('ready');
@@ -68,9 +68,9 @@ function ConfirmEmailContent() {
     setStatus('processing_payment');
     const result = await createCheckoutFromConfirmationToken(token);
 
-    if (result.error || !result.url) {
+    if (('error' in result && result.error) || !('url' in result) || !result.url) {
       setStatus('error');
-      setMessage(result.error || 'Unable to start payment. Please try again.');
+      setMessage(('error' in result && result.error) || 'Unable to start payment. Please try again.');
       return;
     }
 
