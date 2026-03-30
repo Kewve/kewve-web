@@ -558,6 +558,7 @@ export const buyerRequestAPI = {
     market: string;
     timeline: string;
     packagingFormat?: string;
+    otherInformation?: string;
     deliveryAddress: {
       line1: string;
       line2?: string;
