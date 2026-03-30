@@ -137,6 +137,38 @@ export async function completeRegistration(sessionId: string) {
       console.error('Welcome email send error:', emailError);
     }
 
+    // Notify admin about successful registration completion
+    try {
+      const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+      if (ADMIN_EMAIL) {
+        const firstName = (metadata.registration_name || '').trim().split(/\s+/)[0] || 'there';
+        await sendEmail({
+          to: ADMIN_EMAIL,
+          subject: 'New registration completed — producer',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color:#1a2e23;">
+              <h2 style="margin: 0 0 16px;">New registration completed</h2>
+              <p style="margin: 0 0 10px; font-size: 15px; line-height: 1.6;">
+                Hi Admin,
+              </p>
+              <p style="margin: 0 0 12px; font-size: 15px; line-height: 1.6;">
+                A producer has completed registration and payment.
+              </p>
+              <p style="margin: 0 0 6px; font-size: 15px; line-height: 1.6;"><strong>Name:</strong> ${metadata.registration_name || firstName}</p>
+              <p style="margin: 0 0 6px; font-size: 15px; line-height: 1.6;"><strong>Email:</strong> ${metadata.registration_email}</p>
+              <p style="margin: 0 0 16px; font-size: 15px; line-height: 1.6;"><strong>Country:</strong> ${metadata.registration_country || '—'}</p>
+              <p style="margin: 0; font-size: 13px; line-height: 1.6; color:#666;">
+                Review their dashboard for assessment progress and document submissions.
+              </p>
+            </div>
+          `,
+          attachFooterImage: false,
+        });
+      }
+    } catch (adminEmailError) {
+      console.error('Admin notification email error:', adminEmailError);
+    }
+
     return {
       success: true,
       user: registerData.data.user,

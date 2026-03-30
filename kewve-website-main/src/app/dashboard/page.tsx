@@ -12,6 +12,7 @@ import {
   FileText,
   AlertTriangle,
   Loader2,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,6 +21,13 @@ const VERIFICATION_CATEGORIES = [
   'food-safety', 'export-license', 'phyto-cert',
   'prod-capacity', 'packaging', 'quality-ctrl',
 ];
+
+interface DashboardAlertItem {
+  id: string;
+  title: string;
+  reason: string;
+  href: string;
+}
 
 function computeReadinessScore(data: any) {
   if (!data) return { score: 0, max: 100 };
@@ -120,6 +128,9 @@ export default function DashboardPage() {
     totalSections: 5,
   });
   const [productCount, setProductCount] = useState(0);
+  const [alertItems, setAlertItems] = useState<DashboardAlertItem[]>([]);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
+  const [dismissRejectedBanner, setDismissRejectedBanner] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -153,6 +164,16 @@ export default function DashboardPage() {
               total: VERIFICATION_CATEGORIES.length,
               rejected: rejectedCategories.size,
             });
+
+            const documentAlerts: DashboardAlertItem[] = data.documents
+              .filter((d: any) => d.status === 'rejected' && d.rejectionReason)
+              .map((d: any, index: number) => ({
+                id: `doc-${d._id || index}`,
+                title: `Document rejected: ${d.name || 'Unnamed document'}`,
+                reason: String(d.rejectionReason || ''),
+                href: '/dashboard/verification',
+              }));
+            setAlertItems((prev) => [...documentAlerts, ...prev.filter((a) => !a.id.startsWith('doc-'))]);
           }
         }
 
@@ -164,7 +185,18 @@ export default function DashboardPage() {
 
         // Products
         if (productsRes.status === 'fulfilled' && productsRes.value.success) {
-          setProductCount(productsRes.value.data?.length || 0);
+          const products = productsRes.value.data || [];
+          setProductCount(products.length);
+
+          const productAlerts: DashboardAlertItem[] = products
+            .filter((p: any) => p.verification === 'rejected' && p.rejectionReason)
+            .map((p: any, index: number) => ({
+              id: `product-${p._id || index}`,
+              title: `Product rejected: ${p.name || 'Unnamed product'}`,
+              reason: String(p.rejectionReason || ''),
+              href: '/dashboard/products',
+            }));
+          setAlertItems((prev) => [...prev.filter((a) => !a.id.startsWith('product-')), ...productAlerts]);
         }
       } catch {
         // Silently fail — cards will show defaults
@@ -322,8 +354,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Rejected documents alert */}
-      {!loading && verification.rejected > 0 && (
-        <Link href='/dashboard/verification' className='block bg-red-50 rounded-xl p-5 border border-red-200 hover:border-red-300 transition-colors'>
+      {!loading && verification.rejected > 0 && !dismissRejectedBanner && (
+        <div className='block bg-red-50 rounded-xl p-5 border border-red-200 transition-colors'>
           <div className='flex items-start gap-3'>
             <AlertTriangle className='w-5 h-5 text-red-500 mt-0.5 shrink-0' />
             <div>
@@ -333,12 +365,18 @@ export default function DashboardPage() {
               <p className={`text-sm text-gray-600 mt-0.5 ${josefinRegular.className}`}>
                 Some of your verification documents have been rejected. Please review the reasons and re-upload the corrected documents.
               </p>
-              <span className={`inline-flex items-center gap-1.5 text-xs text-red-700 mt-2 ${josefinSemiBold.className}`}>
+              <Link href='/dashboard/verification' className={`inline-flex items-center gap-1.5 text-xs text-red-700 mt-2 hover:underline ${josefinSemiBold.className}`}>
                 Go to Verification <ArrowRight className='w-3.5 h-3.5' />
-              </span>
+              </Link>
             </div>
+            <button
+              onClick={() => setDismissRejectedBanner(true)}
+              className='ml-auto text-red-500 hover:text-red-700 p-1 rounded'
+              aria-label='Dismiss rejected documents alert'>
+              <X className='w-4 h-4' />
+            </button>
           </div>
-        </Link>
+        </div>
       )}
 
       {/* Alerts */}
@@ -347,13 +385,43 @@ export default function DashboardPage() {
           <AlertTriangle className='w-5 h-5 text-orange' />
           <h2 className={`text-lg text-gray-900 ${josefinSemiBold.className}`}>Alerts</h2>
         </div>
-        <p className={`text-sm text-gray-500 ${josefinRegular.className}`}>
-          {!readiness.hasAssessment
-            ? 'Complete your export readiness assessment to get started.'
-            : verification.uploaded < verification.total
-              ? `You have ${VERIFICATION_CATEGORIES.length - verification.uploaded} verification document(s) still pending.`
-              : 'No alerts at this time. You\'re on track!'}
-        </p>
+        {alertItems.filter((a) => !dismissedAlertIds.has(a.id)).length > 0 ? (
+          <div className='space-y-2'>
+            {alertItems
+              .filter((alert) => !dismissedAlertIds.has(alert.id))
+              .slice(0, 5)
+              .map((alert) => (
+              <div key={alert.id} className='rounded-lg border border-red-200 bg-red-50 px-3 py-2'>
+                <div className='flex items-start gap-2'>
+                  <Link href={alert.href} className='block flex-1 hover:opacity-90 transition-opacity'>
+                    <p className={`text-sm text-red-800 ${josefinSemiBold.className}`}>{alert.title}</p>
+                    <p className={`text-xs text-red-700 mt-0.5 ${josefinRegular.className}`}>Reason: {alert.reason}</p>
+                  </Link>
+                  <button
+                    onClick={() =>
+                      setDismissedAlertIds((prev) => {
+                        const next = new Set(prev);
+                        next.add(alert.id);
+                        return next;
+                      })
+                    }
+                    className='text-red-500 hover:text-red-700 p-1 rounded'
+                    aria-label='Dismiss alert'>
+                    <X className='w-4 h-4' />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className={`text-sm text-gray-500 ${josefinRegular.className}`}>
+            {!readiness.hasAssessment
+              ? 'Complete your export readiness assessment to get started.'
+              : verification.uploaded < verification.total
+                ? `You have ${VERIFICATION_CATEGORIES.length - verification.uploaded} verification document(s) still pending.`
+                : 'No alerts at this time. You\'re on track!'}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
   Settings,
   X,
   Lock,
+  Wallet,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -48,6 +49,7 @@ const menuItems: {
   { label: 'Products', href: '/dashboard/products', icon: Package, unlockKey: 'products' },
   { label: 'Aggregation', href: '/dashboard/aggregation', icon: Layers, unlockKey: 'products' },
   { label: 'Trade Operations', href: '/dashboard/trade-operations', icon: ArrowLeftRight, unlockKey: 'products' },
+  { label: 'Accounts', href: '/dashboard/accounts', icon: Wallet, unlockKey: 'products' },
   { label: 'Automation', href: '/dashboard/automation', icon: Zap, unlockKey: 'products' },
   { label: 'Insights', href: '/dashboard/insights', icon: BarChart3, unlockKey: 'products' },
   { label: 'Settings', href: '/dashboard/settings', icon: Settings, unlockKey: 'settings' },

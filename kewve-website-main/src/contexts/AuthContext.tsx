@@ -9,14 +9,28 @@ interface User {
   email: string;
   name: string;
   role?: string;
+  /** Present when backend supports dual buyer + producer on one account */
+  roles?: string[];
   businessName?: string;
   country?: string;
+  /** Stripe Connect account id for producer payouts (acct_…) */
+  stripeConnectAccountId?: string;
+  /** Buyer default delivery (when complete) */
+  savedDeliveryAddress?: {
+    line1: string;
+    line2?: string;
+    city: string;
+    postalCode: string;
+    country: string;
+    phone?: string;
+    company?: string;
+  };
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, expectedRole?: 'buyer' | 'producer') => Promise<User>;
   register: (data: {
     email: string;
     password: string;
@@ -57,11 +71,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string, expectedRole?: 'buyer' | 'producer'): Promise<User> => {
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await authAPI.login({ email, password, expectedRole });
       if (response.success) {
-        setUser(response.data.user);
+        const loggedInUser = response.data.user as User;
+        setUser(loggedInUser);
+        return loggedInUser;
       } else {
         throw new Error('Login failed');
       }

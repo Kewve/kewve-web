@@ -90,6 +90,18 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
       type: String,
       enum: ["yes", "no"],
     },
+    productRegulatoryApproval: {
+      type: String,
+      enum: ["yes", "in_progress", "no"],
+    },
+    facilityInspectionApproval: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    brandTrademarkApproval: {
+      type: String,
+      enum: ["yes", "no", "not_applicable"],
+    },
     exportLicense: {
       type: String,
       enum: ["yes", "no"],
@@ -114,6 +126,10 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
       type: String,
       enum: ["yes", "no"],
     },
+    testedValidatedApprovedByAuthority: {
+      type: String,
+      enum: ["yes", "no"],
+    },
     isoCertification: {
       type: String,
       enum: ["yes", "no"],
@@ -131,6 +147,22 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
       enum: ["yes", "no"],
     },
     barcodes: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    labelBatchLotNumber: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    labelManufacturingDate: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    labelExpiryDate: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    labelRegulatoryRegistrationNumber: {
       type: String,
       enum: ["yes", "no"],
     },
@@ -163,6 +195,10 @@ const AssessmentSchema = new Schema<AssessmentDocument>(
       enum: ["yes", "no"],
     },
     exportGradeCartons: {
+      type: String,
+      enum: ["yes", "no"],
+    },
+    traceToCustomers: {
       type: String,
       enum: ["yes", "no"],
     },

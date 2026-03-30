@@ -1,6 +1,4 @@
 'use client';
-
-import { useEffect, useMemo, useState } from 'react';
 import {
   Check,
   Shield,
@@ -14,20 +12,11 @@ import {
 } from 'lucide-react';
 import { titleFont, josefinRegular, josefinSemiBold } from '@/utils';
 import Link from 'next/link';
+import { GDPR } from '@/lib/gdprCopy';
 
 const STANDARD_PRICE_CENTS = 10000;
 
 const formatEuro = (cents: number) => `EUR${(cents / 100).toFixed(0)}`;
-
-const getApiBaseUrl = () => {
-  if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL;
-  if (typeof window !== 'undefined') {
-    const { origin } = window.location;
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return 'http://localhost:5000/api';
-    return `${origin}/api`;
-  }
-  return '/api';
-};
 
 const steps = [
   {
@@ -90,61 +79,6 @@ const benefits = [
 ];
 
 export default function AssessmentLanding() {
-  const [tierPriceCents, setTierPriceCents] = useState<number | null>(null);
-  const [isTierResolved, setIsTierResolved] = useState(false);
-
-  useEffect(() => {
-    const loadTierPrice = async () => {
-      let hadCachedTier = false;
-      if (typeof window !== 'undefined') {
-        const cachedTier = Number(window.sessionStorage.getItem('assessment-tier-price-cents') || '');
-        if (Number.isFinite(cachedTier) && cachedTier > 0) {
-          setTierPriceCents(cachedTier);
-          setIsTierResolved(true);
-          hadCachedTier = true;
-        }
-      }
-
-      try {
-        const res = await fetch(`${getApiBaseUrl()}/pricing/assessment-tier`, { method: 'GET' });
-        if (!res.ok) {
-          if (!hadCachedTier) {
-            setTierPriceCents(STANDARD_PRICE_CENTS);
-            setIsTierResolved(true);
-          }
-          return;
-        }
-        const json = await res.json();
-        const cents = Number(json?.data?.unitAmountCents);
-        if (Number.isFinite(cents) && cents > 0) {
-          setTierPriceCents(cents);
-          if (typeof window !== 'undefined') {
-            window.sessionStorage.setItem('assessment-tier-price-cents', String(cents));
-          }
-        } else if (!hadCachedTier) {
-          setTierPriceCents(STANDARD_PRICE_CENTS);
-        }
-      } catch {
-        if (!hadCachedTier) {
-          setTierPriceCents(STANDARD_PRICE_CENTS);
-        }
-      } finally {
-        setIsTierResolved(true);
-      }
-    };
-
-    loadTierPrice();
-  }, []);
-
-  const displayedPriceCents = tierPriceCents ?? STANDARD_PRICE_CENTS;
-  const discountPercent = useMemo(() => {
-    const pct = Math.round(((STANDARD_PRICE_CENTS - displayedPriceCents) / STANDARD_PRICE_CENTS) * 100);
-    return Math.max(0, pct);
-  }, [displayedPriceCents]);
-
-  const hasDiscount = displayedPriceCents < STANDARD_PRICE_CENTS;
-  const isTierLoading = !isTierResolved && tierPriceCents === null;
-
   return (
     <>
       {/* Hero Section */}
@@ -195,36 +129,9 @@ export default function AssessmentLanding() {
             </div>
 
             <div className='relative bg-white rounded-3xl shadow-xl border border-black/5 p-5 sm:p-7'>
-              {!isTierLoading && hasDiscount && (
-                <div className='hidden sm:block absolute top-0 right-0 w-32 h-32 overflow-hidden rounded-tr-3xl pointer-events-none z-10'>
-                  <div className='absolute top-5 -right-11 w-44 bg-orange text-white py-1 text-center rotate-45 leading-tight'>
-                    <span className={`block text-[11px] ${josefinSemiBold.className}`}>{discountPercent}% OFF</span>
-                    <span className={`block text-[9px] ${josefinRegular.className}`}>First 100 only</span>
-                  </div>
-                </div>
-              )}
-
-              <div className='flex items-center gap-2 text-black/80 mb-3'>
-                <Sparkles className='w-4 h-4 text-[#e0a633]' />
-                <p className={`text-sm sm:text-lg ${josefinSemiBold.className}`}>
-                  {isTierLoading ? 'Checking current offer...' : hasDiscount ? `Limited Offer - ${discountPercent}% Off` : 'Current Offer'}
-                </p>
-              </div>
-              {!isTierLoading && hasDiscount && (
-                <div className='sm:hidden inline-flex items-center rounded-full bg-orange/10 text-orange px-3 py-1 mb-3'>
-                  <span className={`text-xs ${josefinSemiBold.className}`}>{discountPercent}% OFF - first 100 only</span>
-                </div>
-              )}
-              <div className='h-px bg-black/10 mb-5' />
-
               <div className='mb-6 text-center'>
-                {(isTierLoading || hasDiscount) && (
-                  <span className={`text-2xl sm:text-4xl text-black/45 line-through mr-2 sm:mr-3 ${josefinRegular.className}`}>
-                    {formatEuro(STANDARD_PRICE_CENTS)}
-                  </span>
-                )}
                 <span className={`text-4xl sm:text-5xl text-orange ${josefinSemiBold.className}`}>
-                  {isTierLoading ? '...' : formatEuro(displayedPriceCents)}
+                  {formatEuro(STANDARD_PRICE_CENTS)}
                 </span>
               </div>
 
@@ -239,6 +146,9 @@ export default function AssessmentLanding() {
                 One-time payment &middot; No recurring fees
               </p>
               <p className={`text-center text-sm sm:text-base text-black-muted/60 mt-0.5 ${josefinRegular.className}`}>Secure via Stripe</p>
+              <p className={`text-center text-xs text-black-muted/70 mt-3 max-w-sm mx-auto leading-snug ${josefinRegular.className}`}>
+                {GDPR.paymentsCheckout}
+              </p>
             </div>
           </div>
         </div>
@@ -346,14 +256,12 @@ export default function AssessmentLanding() {
           <Link
             href='/register'
             className={`group inline-flex items-center gap-2 bg-orange text-white rounded-md py-4 px-10 text-lg font-semibold transition-all hover:bg-orange/90 cursor-pointer ${josefinSemiBold.className}`}>
-            Get Started —
-            <span className='line-through opacity-70'>€100</span>
-            <span>€50</span>
+            Get Started — €{(STANDARD_PRICE_CENTS / 100).toFixed(0)}
             <ArrowRight className='w-5 h-5 group-hover:translate-x-1 transition-transform' />
           </Link>
 
           <p className={`text-sm text-black-muted/70 mt-4 ${josefinRegular.className}`}>
-            New signups: first 100 get 50% off (pay €50).
+            Valid partner discount codes may reduce the fee at checkout.
           </p>
           <p className={`text-sm text-black-muted/50 mt-1 ${josefinRegular.className}`}>
             Secure payment via Stripe &middot; One-time fee &middot; No hidden charges

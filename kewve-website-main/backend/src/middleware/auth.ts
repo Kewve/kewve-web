@@ -1,27 +1,21 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User, UserDocument } from "../models/User.js";
+import { userHasRole } from "../utils/userRoles.js";
 
 export interface AuthRequest extends Request {
   user?: UserDocument;
 }
 
-// Get JWT_SECRET lazily to allow dotenv.config() to run first
 const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error(
-      "JWT_SECRET is not set! Make sure you set it in your environment variables."
-    );
+    throw new Error("JWT_SECRET is not set! Make sure you set it in your environment variables.");
   }
   return secret;
 };
 
-export const authenticate = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
 
@@ -33,7 +27,8 @@ export const authenticate = async (
       return;
     }
 
-    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string; userType?: string };
+
     const user = await User.findById(decoded.userId).select("+password");
 
     if (!user) {
@@ -61,12 +56,8 @@ export const authenticate = async (
   }
 };
 
-export const requireAdmin = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  if (!req.user || req.user.role !== 'admin') {
+export const requireAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.user || !userHasRole(req.user, "admin")) {
     res.status(403).json({
       success: false,
       message: "Admin access required.",

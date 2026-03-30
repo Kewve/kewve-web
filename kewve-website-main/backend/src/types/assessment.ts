@@ -4,6 +4,9 @@ export interface AssessmentInput {
   userId: Types.ObjectId | string;
   country?: string;
   businessRegistered?: string;
+  productRegulatoryApproval?: string;
+  facilityInspectionApproval?: string;
+  brandTrademarkApproval?: string;
   exportLicense?: string;
   yearsInBusiness?: string;
   haccpCertification?: string;
@@ -15,6 +18,10 @@ export interface AssessmentInput {
   nutritionPanel?: string;
   labelsInEnglish?: string;
   barcodes?: string;
+  labelBatchLotNumber?: string;
+  labelManufacturingDate?: string;
+  labelExpiryDate?: string;
+  labelRegulatoryRegistrationNumber?: string;
   shelfLifeInfo?: string;
   monthlyProductionCapacity?: string;
   consistentSupply?: string;
@@ -25,6 +32,8 @@ export interface AssessmentInput {
   exportGradeCartons?: string;
   palletiseShipments?: string;
   deliverToUK?: string;
+  traceToCustomers?: string;
+  testedValidatedApprovedByAuthority?: string;
   documents?: {
     name: string;
     type: string;

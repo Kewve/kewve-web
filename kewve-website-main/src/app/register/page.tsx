@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { requestRegistrationEmailConfirmation } from '@/actions/registrationFlow';
+import { GDPR } from '@/lib/gdprCopy';
 
 const TRADING_PLATFORM_TNC = `Terms and conditions for the Kewve Trading Platform
 Kewve Ltd (Kewve) of Church Field Close, Mulhuddart. D15 KC9E. Ireland.
@@ -140,6 +141,7 @@ export default function RegisterPage() {
   const [emailError, setEmailError] = useState('');
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [acceptedTnc, setAcceptedTnc] = useState(false);
+  const [acceptedPrivacyGdpr, setAcceptedPrivacyGdpr] = useState(false);
   const [tncExpanded, setTncExpanded] = useState(false);
   const { toast } = useToast();
 
@@ -199,6 +201,15 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!acceptedPrivacyGdpr) {
+      toast({
+        title: 'Consent required',
+        description: 'Please confirm your agreement to how we collect and use your information.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -233,6 +244,7 @@ export default function RegisterPage() {
       });
       setEmailError('');
       setAcceptedTnc(false);
+      setAcceptedPrivacyGdpr(false);
       setTncExpanded(false);
       toast({
         title: 'Check your email',
@@ -425,9 +437,32 @@ export default function RegisterPage() {
                 </span>
               </label>
 
+              <label className='flex items-start gap-3 cursor-pointer'>
+                <input
+                  type='checkbox'
+                  checked={acceptedPrivacyGdpr}
+                  onChange={(e) => setAcceptedPrivacyGdpr(e.target.checked)}
+                  className='mt-1 h-4 w-4 rounded border-gray-300 accent-[#ed722d]'
+                />
+                <span className={`text-sm text-black ${josefinRegular.className}`}>
+                  {(() => {
+                    const [before, after] = GDPR.registration.split('Privacy Policy');
+                    return (
+                      <>
+                        {before}
+                        <Link href='/privacy' className='text-orange underline font-semibold'>
+                          Privacy Policy
+                        </Link>
+                        {after}
+                      </>
+                    );
+                  })()}
+                </span>
+              </label>
+
               <button
                 type='submit'
-                disabled={loading || !!emailError || checkingEmail || !acceptedTnc}
+                disabled={loading || !!emailError || checkingEmail || !acceptedTnc || !acceptedPrivacyGdpr}
                 className={`w-full bg-black text-white border-2 border-black rounded-full py-3 px-6 text-base font-semibold transition-all text-center hover:bg-muted-orange hover:border-muted-orange disabled:opacity-50 disabled:cursor-not-allowed ${josefinSemiBold.className}`}>
                 {loading ? 'Sending confirmation email...' : 'Confirm Email to Continue'}
               </button>

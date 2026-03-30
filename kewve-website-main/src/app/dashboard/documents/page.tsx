@@ -11,6 +11,8 @@ import {
   Trash2,
   Download,
 } from 'lucide-react';
+import Link from 'next/link';
+import { GDPR } from '@/lib/gdprCopy';
 
 interface DocumentMeta {
   _id: string;
@@ -100,7 +102,7 @@ export default function DocumentsPage() {
   const handleDownload = async (doc: DocumentMeta) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-      const token = localStorage.getItem('authToken');
+      const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
       const res = await fetch(`${apiUrl}/assessment/documents/${doc._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -166,6 +168,16 @@ export default function DocumentsPage() {
             }
           }}
         />
+      </div>
+
+      <div className='rounded-xl border border-gray-200 bg-gray-50 px-4 py-3'>
+        <p className={`text-xs sm:text-sm text-gray-700 leading-relaxed ${josefinRegular.className}`}>
+          {GDPR.documentUpload} See our{' '}
+          <Link href='/privacy' className='text-[#ed722d] underline font-semibold hover:opacity-80'>
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
 
       {/* Table */}

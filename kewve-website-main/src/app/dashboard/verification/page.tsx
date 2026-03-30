@@ -6,6 +6,9 @@ import { josefinSemiBold, josefinRegular } from '@/utils';
 import { assessmentAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { useDashboardProgress } from '@/contexts/DashboardProgressContext';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { GDPR } from '@/lib/gdprCopy';
 import {
   Upload,
   CheckCircle2,
@@ -71,6 +74,7 @@ const buildInitialSections = (): VerificationSection[] => [
 ];
 
 export default function VerificationPage() {
+  const { user } = useAuth();
   const [sections, setSections] = useState<VerificationSection[]>(buildInitialSections());
   const [loadingDocs, setLoadingDocs] = useState(true);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -130,6 +134,7 @@ export default function VerificationPage() {
 
   const handleFileChange = async (sectionIdx: number, docIdx: number, file: File) => {
     const docId = sections[sectionIdx].documents[docIdx].id;
+    const docLabel = sections[sectionIdx].documents[docIdx].label;
 
     setSections((prev) => {
       const updated = [...prev];
@@ -169,6 +174,26 @@ export default function VerificationPage() {
         title: 'Uploaded',
         description: `${file.name} uploaded successfully.`,
       });
+
+      // Notify admin that a document was submitted.
+      try {
+        await fetch('/api/admin-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'document_uploaded',
+            payload: {
+              userName: user?.name,
+              userEmail: user?.email,
+              documentLabel: docLabel,
+              fileName: file.name,
+              documentCategory: docId,
+            },
+          }),
+        });
+      } catch (notifyErr) {
+        console.warn('Admin notify (document_uploaded) failed:', notifyErr);
+      }
 
       await refreshProgress();
     } catch (error: any) {
@@ -225,6 +250,16 @@ export default function VerificationPage() {
                 ? 'Under Review'
                 : 'Pending'}
         </span>
+      </div>
+
+      <div className='rounded-xl border border-gray-200 bg-gray-50 px-4 py-3'>
+        <p className={`text-xs sm:text-sm text-gray-700 leading-relaxed ${josefinRegular.className}`}>
+          {GDPR.documentUpload} See our{' '}
+          <Link href='/privacy' className='text-orange underline font-semibold hover:opacity-80'>
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
 
       {/* Rejected Alert Banner */}

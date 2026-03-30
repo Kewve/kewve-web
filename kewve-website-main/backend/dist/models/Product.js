@@ -9,6 +9,20 @@ export const PRODUCT_CATEGORIES = [
     "Processed Food",
     "Others",
 ];
+const ProductComplianceDocSchema = new Schema({
+    name: { type: String, required: true },
+    type: { type: String, required: true },
+    data: { type: Schema.Types.Buffer, required: true },
+    size: { type: Number, required: true },
+    status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+    },
+    rejectionReason: { type: String },
+    reviewedAt: { type: Date },
+    uploadedAt: { type: Date, default: Date.now },
+}, { _id: true });
 const ProductSchema = new Schema({
     userId: {
         type: Schema.Types.ObjectId,
@@ -23,6 +37,10 @@ const ProductSchema = new Schema({
         data: { type: Schema.Types.Buffer },
         contentType: { type: String },
     },
+    complianceDocuments: {
+        type: [ProductComplianceDocSchema],
+        default: [],
+    },
     minimumOrderQuantity: { type: Number, default: 0 },
     unitPrice: { type: Number, default: 0 },
     leadTime: { type: Number, default: 0 },
@@ -36,6 +54,10 @@ const ProductSchema = new Schema({
         type: String,
         enum: ["pending", "verified", "rejected"],
         default: "pending",
+    },
+    rejectionReason: {
+        type: String,
+        default: "",
     },
     aggregation: {
         type: String,

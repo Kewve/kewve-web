@@ -8,17 +8,22 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import TopBar from '@/components/dashboard/TopBar';
 import { Loader2 } from 'lucide-react';
 import { josefinRegular } from '@/utils';
+import { hasBuyerAccess, hasProducerAccess } from '@/lib/roleRouting';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login?redirect=/dashboard');
+      return;
     }
-  }, [loading, isAuthenticated, router]);
+    if (!loading && isAuthenticated && !hasProducerAccess(user)) {
+      router.push(hasBuyerAccess(user) ? '/buyer' : '/login?redirect=/dashboard');
+    }
+  }, [loading, isAuthenticated, user, router]);
 
   if (loading) {
     return (
@@ -32,6 +37,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!isAuthenticated) {
+    return null;
+  }
+
+  if (!hasProducerAccess(user)) {
     return null;
   }
 

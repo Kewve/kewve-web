@@ -21,7 +21,7 @@ function ProductThumbnail({ productId, name }: { productId: string; name: string
     const loadImage = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-        const token = localStorage.getItem('authToken');
+        const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
         const res = await fetch(`${apiUrl}/products/${productId}/image`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -60,6 +60,7 @@ function ProductThumbnail({ productId, name }: { productId: string; name: string
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [allVerified, setAllVerified] = useState(false);
   const router = useRouter();
 
@@ -95,6 +96,20 @@ export default function ProductsPage() {
 
   const badgeClass = () => {
     return `text-xs px-2.5 py-1 rounded-full border border-gray-300 text-gray-600 ${josefinRegular.className}`;
+  };
+
+  const handleDelete = async (productId: string, productName?: string) => {
+    const confirmed = window.confirm(`Delete "${productName || 'this product'}"? This action cannot be undone.`);
+    if (!confirmed) return;
+    try {
+      setDeletingId(productId);
+      await productAPI.deleteProduct(productId);
+      setProducts((prev) => prev.filter((p) => p._id !== productId));
+    } catch {
+      // Keep current non-blocking behavior for now.
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (loading) {
@@ -218,11 +233,19 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className='px-5 py-4'>
-                      <button
-                        onClick={() => router.push(`/dashboard/products/${product._id}`)}
-                        className={`text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors ${josefinRegular.className}`}>
-                        Edit
-                      </button>
+                      <div className='flex items-center gap-2'>
+                        <button
+                          onClick={() => router.push(`/dashboard/products/${product._id}`)}
+                          className={`text-sm text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors ${josefinRegular.className}`}>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product._id, product.name)}
+                          disabled={deletingId === product._id}
+                          className={`text-sm text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 transition-colors disabled:opacity-60 ${josefinRegular.className}`}>
+                          {deletingId === product._id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

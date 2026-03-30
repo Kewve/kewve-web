@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface DiscountCodeDocument extends Document {
   code: string;
   discountPercent: number;
+  discountAmountEuros?: number;
   isActive: boolean;
   createdBy?: string;
   usageCount: number;
@@ -21,9 +22,15 @@ const DiscountCodeSchema = new Schema<DiscountCodeDocument>(
     },
     discountPercent: {
       type: Number,
-      default: 15,
+      default: 10,
       min: 1,
       max: 100,
+    },
+    // Legacy support for old fixed-amount discount codes.
+    discountAmountEuros: {
+      type: Number,
+      min: 1,
+      max: 1000,
     },
     isActive: {
       type: Boolean,
