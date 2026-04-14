@@ -182,6 +182,13 @@ function LoginForm() {
                   className='bg-white border-gray-300'
                   placeholder='Enter your password'
                 />
+                <div className='mt-2 text-right'>
+                  <Link
+                    href='/forgot-password'
+                    className={`text-xs text-orange font-semibold hover:underline ${josefinRegular.className}`}>
+                    Forgot password?
+                  </Link>
+                </div>
               </div>
 
               <button
