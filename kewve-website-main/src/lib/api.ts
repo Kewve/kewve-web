@@ -85,7 +85,7 @@ const apiRequest = async <T>(
       raw.toLowerCase().includes('network');
     throw new Error(
       isNetwork
-        ? 'Could not reach the API. Check your network connection, that the backend is running, and that NEXT_PUBLIC_API_URL points to it (e.g. http://localhost:5000/api for local dev).'
+        ? 'We could not connect right now. Please check your internet connection and try again.'
         : raw,
     );
   }
@@ -102,8 +102,11 @@ const apiRequest = async <T>(
     if (response.status === 401 && errorMessage === `HTTP error! status: 401`) {
       errorMessage = 'Authentication failed. Please check your credentials.';
     } else if (response.status === 404 && errorMessage === `HTTP error! status: 404`) {
-      errorMessage =
-        'API endpoint not found. Check NEXT_PUBLIC_API_URL and that the backend exposes this route.';
+      errorMessage = 'We could not find what you were looking for. Please try again.';
+    } else if (response.status >= 500) {
+      errorMessage = 'Something went wrong on our side. Please try again in a moment.';
+    } else if (/^HTTP error!\sstatus:\s\d+$/i.test(errorMessage)) {
+      errorMessage = 'Something went wrong. Please try again.';
     }
 
     throw new Error(errorMessage);
@@ -731,10 +734,29 @@ const adminRequest = async <T>(endpoint: string, options: RequestInit = {}): Pro
     headers['Authorization'] = `Bearer ${token}`;
   }
   const apiUrl = getApiBaseUrl();
-  const response = await fetch(`${apiUrl}${endpoint}`, { ...options, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${apiUrl}${endpoint}`, { ...options, headers });
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    const isNetwork =
+      raw === 'Failed to fetch' ||
+      raw.includes('NetworkError') ||
+      raw.toLowerCase().includes('network');
+    throw new Error(
+      isNetwork
+        ? 'We could not connect right now. Please check your internet connection and try again.'
+        : 'Something went wrong. Please try again.'
+    );
+  }
   if (!response.ok) {
     let msg = `HTTP error! status: ${response.status}`;
     try { const err = await response.json(); msg = err.message || msg; } catch {}
+    if (response.status >= 500) {
+      msg = 'Something went wrong on our side. Please try again in a moment.';
+    } else if (/^HTTP error!\sstatus:\s\d+$/i.test(msg)) {
+      msg = 'Something went wrong. Please try again.';
+    }
     throw new Error(msg);
   }
   return response.json();

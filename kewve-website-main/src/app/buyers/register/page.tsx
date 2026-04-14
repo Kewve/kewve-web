@@ -79,25 +79,6 @@ export default function BuyerRegisterPage() {
         console.warn('Buyer verification email failed:', emailResult.error);
       }
 
-      // Notify admin about new buyer registration
-      try {
-        await fetch('/api/admin-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventType: 'registration_completed',
-            payload: {
-              userRole: 'buyer',
-              userName: formData.name,
-              userEmail: formData.email,
-              country: formData.country || undefined,
-            },
-          }),
-        });
-      } catch (notifyErr) {
-        console.warn('Admin notify (buyer registration_completed) failed:', notifyErr);
-      }
-
       toast({
         title: 'Check your email',
         description: 'We sent a verification link. Please verify your email before logging in.',
