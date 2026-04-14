@@ -54,6 +54,27 @@ export default function BuyerVerifyEmailContent() {
           await sendBuyerWelcomeEmail({ name: user.name, email: user.email });
         }
 
+        // Notify admin only after the buyer has verified their email.
+        if (user?.name && user?.email) {
+          try {
+            await fetch('/api/admin-notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                eventType: 'registration_completed',
+                payload: {
+                  userRole: 'buyer',
+                  userName: user.name,
+                  userEmail: user.email,
+                  country: user.country || undefined,
+                },
+              }),
+            });
+          } catch (notifyErr) {
+            console.warn('Admin notify (buyer registration_completed after verification) failed:', notifyErr);
+          }
+        }
+
         setSuccess(true);
         setMessage('Email verified successfully. You can now log in to your buyer dashboard.');
       } catch {

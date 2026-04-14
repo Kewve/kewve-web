@@ -23,6 +23,81 @@ interface VerifyEmailRequest extends Request {
   };
 }
 
+interface PendingBuyerRegistrationPayload {
+  email: string;
+  password: string;
+  name: string;
+  role: "buyer";
+  businessName?: string;
+  country?: string;
+  discountCodeUsed?: string;
+  exp: number;
+}
+
+const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
+
+const getEmailVerificationSecret = (): string => {
+  return (
+    process.env.EMAIL_VERIFICATION_SECRET ||
+    process.env.JWT_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    process.env.SMTP_PASS ||
+    ""
+  );
+};
+
+const createPendingBuyerVerificationToken = (payload: Omit<PendingBuyerRegistrationPayload, "exp">): string => {
+  const secret = getEmailVerificationSecret();
+  if (!secret) {
+    throw new Error("Email verification secret is not configured.");
+  }
+  const tokenPayload: PendingBuyerRegistrationPayload = {
+    ...payload,
+    exp: Date.now() + EMAIL_VERIFICATION_TTL_MS,
+  };
+  const encodedPayload = Buffer.from(JSON.stringify(tokenPayload)).toString("base64url");
+  const signature = crypto.createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+  return `${encodedPayload}.${signature}`;
+};
+
+const verifyPendingBuyerVerificationToken = (
+  token: string
+): { valid: true; payload: PendingBuyerRegistrationPayload } | { valid: false; error: string } => {
+  const secret = getEmailVerificationSecret();
+  if (!secret) {
+    return { valid: false, error: "Email verification is temporarily unavailable." };
+  }
+
+  const parts = token.split(".");
+  if (parts.length !== 2) {
+    return { valid: false, error: "Invalid or expired verification link." };
+  }
+
+  const [encodedPayload, providedSignature] = parts;
+  const expectedSignature = crypto.createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+  if (providedSignature.length !== expectedSignature.length) {
+    return { valid: false, error: "Invalid or expired verification link." };
+  }
+
+  const signaturesMatch = crypto.timingSafeEqual(Buffer.from(providedSignature), Buffer.from(expectedSignature));
+  if (!signaturesMatch) {
+    return { valid: false, error: "Invalid or expired verification link." };
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as PendingBuyerRegistrationPayload;
+    if (!payload.exp || Date.now() > payload.exp) {
+      return { valid: false, error: "Invalid or expired verification link." };
+    }
+    if (!payload.email || !payload.password || !payload.name || payload.role !== "buyer") {
+      return { valid: false, error: "Invalid or expired verification link." };
+    }
+    return { valid: true, payload };
+  } catch {
+    return { valid: false, error: "Invalid or expired verification link." };
+  }
+};
+
 interface LoginRequest extends Request {
   body: {
     email: string;
@@ -92,12 +167,30 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
     }
 
     const requiresEmailVerification = normalizedRole === "buyer";
-    const emailVerificationToken = requiresEmailVerification ? crypto.randomBytes(32).toString("hex") : undefined;
-    const emailVerificationTokenExpiry = requiresEmailVerification
-      ? new Date(Date.now() + 24 * 60 * 60 * 1000)
-      : undefined;
 
     const roles = normalizedRole === "buyer" ? (["buyer"] as const) : (["producer"] as const);
+
+    if (requiresEmailVerification) {
+      const emailVerificationToken = createPendingBuyerVerificationToken({
+        email: normalizedEmail,
+        password,
+        name,
+        role: "buyer",
+        businessName,
+        country,
+        discountCodeUsed: normalizedDiscountCode || undefined,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "Buyer registration started. Please verify your email to activate login.",
+        data: {
+          requiresEmailVerification: true,
+          emailVerificationToken,
+        },
+      });
+      return;
+    }
 
     const user = await User.create({
       email: normalizedEmail,
@@ -106,8 +199,8 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       role: normalizedRole,
       roles: [...roles],
       emailVerified: !requiresEmailVerification,
-      emailVerificationToken,
-      emailVerificationTokenExpiry,
+      emailVerificationToken: undefined,
+      emailVerificationTokenExpiry: undefined,
       businessName,
       country,
       discountCodeUsed: normalizedDiscountCode || undefined,
@@ -117,18 +210,15 @@ export const register = async (req: RegisterRequest, res: Response): Promise<voi
       await DiscountCode.updateOne({ code: normalizedDiscountCode }, { $inc: { usageCount: 1 } });
     }
 
-    const token = requiresEmailVerification ? undefined : generateToken(user._id.toString());
+    const token = generateToken(user._id.toString());
 
     res.status(201).json({
       success: true,
-      message: requiresEmailVerification
-        ? "Buyer registered successfully. Please verify your email to activate login."
-        : "User registered successfully",
+      message: "User registered successfully",
       data: {
         user: userPublicJson(user),
         token,
-        requiresEmailVerification,
-        emailVerificationToken,
+        requiresEmailVerification: false,
       },
     });
   } catch (error) {
@@ -264,23 +354,83 @@ export const verifyEmail = async (req: VerifyEmailRequest, res: Response): Promi
       return;
     }
 
-    const user = await User.findOne({
+    const legacyUser = await User.findOne({
       emailVerificationToken: token,
       emailVerificationTokenExpiry: { $gt: new Date() },
     }).select("+emailVerificationToken +emailVerificationTokenExpiry");
 
-    if (!user) {
-      res.status(400).json({
-        success: false,
-        message: "Invalid or expired verification link.",
+    if (legacyUser) {
+      legacyUser.emailVerified = true;
+      legacyUser.emailVerificationToken = undefined;
+      legacyUser.emailVerificationTokenExpiry = undefined;
+      await legacyUser.save({ validateBeforeSave: false });
+
+      res.status(200).json({
+        success: true,
+        message: "Email verified successfully. You can now log in.",
+        data: {
+          user: userPublicJson(legacyUser),
+        },
       });
       return;
     }
 
-    user.emailVerified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationTokenExpiry = undefined;
-    await user.save({ validateBeforeSave: false });
+    const verified = verifyPendingBuyerVerificationToken(token);
+    if (!verified.valid) {
+      res.status(400).json({
+        success: false,
+        message: verified.error,
+      });
+      return;
+    }
+
+    const pending = verified.payload;
+    const existing = await User.findOne({ email: pending.email });
+    if (existing) {
+      if (userHasRole(existing, "buyer")) {
+        res.status(400).json({
+          success: false,
+          message: "This email is already registered as a buyer. Please log in.",
+        });
+        return;
+      }
+      res.status(409).json({
+        success: false,
+        message:
+          "An account with this email already exists. Log in as a producer and use “Buyer signup” in the header to add buyer access.",
+      });
+      return;
+    }
+
+    const normalizedDiscountCode = pending.discountCodeUsed?.toUpperCase().trim();
+    if (normalizedDiscountCode) {
+      const code = await DiscountCode.findOne({ code: normalizedDiscountCode, isActive: true });
+      if (!code) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid or inactive discount code",
+        });
+        return;
+      }
+    }
+
+    const user = await User.create({
+      email: pending.email.toLowerCase().trim(),
+      password: pending.password,
+      name: pending.name,
+      role: "buyer",
+      roles: ["buyer"],
+      emailVerified: true,
+      emailVerificationToken: undefined,
+      emailVerificationTokenExpiry: undefined,
+      businessName: pending.businessName,
+      country: pending.country,
+      discountCodeUsed: normalizedDiscountCode || undefined,
+    });
+
+    if (normalizedDiscountCode) {
+      await DiscountCode.updateOne({ code: normalizedDiscountCode }, { $inc: { usageCount: 1 } });
+    }
 
     res.status(200).json({
       success: true,
