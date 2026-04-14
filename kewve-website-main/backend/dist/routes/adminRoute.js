@@ -407,6 +407,124 @@ router.get("/admin/stats", authenticateAdmin, async (req, res) => {
         res.status(500).json({ success: false, message: "Failed to fetch stats" });
     }
 });
+const ASSESSMENT_RANGE_DAYS = {
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
+};
+function toAssessmentRange(input) {
+    const v = String(input || "").trim().toLowerCase();
+    if (v === "7d" || v === "30d" || v === "90d")
+        return v;
+    return "30d";
+}
+function assessmentConversionRate(count, previous) {
+    if (previous == null)
+        return null;
+    if (!Number.isFinite(previous) || previous <= 0)
+        return 0;
+    return Math.round((count / previous) * 10000) / 100;
+}
+function hasTruthy(value) {
+    if (value === null || value === undefined)
+        return false;
+    if (value instanceof Date)
+        return Number.isFinite(value.getTime());
+    if (typeof value === "string")
+        return value.trim().length > 0;
+    if (typeof value === "number")
+        return Number.isFinite(value);
+    if (typeof value === "boolean")
+        return value;
+    if (Array.isArray(value))
+        return value.length > 0;
+    if (typeof value === "object")
+        return Object.keys(value).length > 0;
+    return false;
+}
+// GET /api/admin/analytics/assessment-dropoff?range=7d|30d|90d
+router.get("/admin/analytics/assessment-dropoff", authenticateAdmin, async (req, res) => {
+    try {
+        const range = toAssessmentRange(req.query.range);
+        const now = new Date();
+        const from = new Date(now.getTime() - ASSESSMENT_RANGE_DAYS[range] * 24 * 60 * 60 * 1000);
+        const assessments = await Assessment.find({ createdAt: { $gte: from, $lte: now } })
+            .select("createdAt country businessRegistered productRegulatoryApproval traceToCustomers haccpCertification monthlyProductionCapacity exportGradeCartons labelsInEnglish shelfLifeInfo documents deliverToUK exportPricing confirmAccuracy agreeCompliance")
+            .lean();
+        const stages = [
+            { key: "started", label: "Started assessment", done: (a) => hasTruthy(a.createdAt) },
+            { key: "export_context", label: "Export context", done: (a) => hasTruthy(a.country) },
+            { key: "business_legal", label: "Business & legal readiness", done: (a) => hasTruthy(a.businessRegistered) },
+            { key: "product_definition", label: "Product definition", done: (a) => hasTruthy(a.productRegulatoryApproval) },
+            { key: "traceability", label: "Product traceability", done: (a) => hasTruthy(a.traceToCustomers) },
+            { key: "food_safety", label: "Food safety", done: (a) => hasTruthy(a.haccpCertification) },
+            { key: "capacity", label: "Production capacity", done: (a) => hasTruthy(a.monthlyProductionCapacity) },
+            { key: "packaging", label: "Packaging readiness", done: (a) => hasTruthy(a.exportGradeCartons) },
+            { key: "labelling", label: "Labelling compliance", done: (a) => hasTruthy(a.labelsInEnglish) },
+            { key: "shelf_life", label: "Shelf life", done: (a) => hasTruthy(a.shelfLifeInfo) },
+            { key: "documentation", label: "Documentation readiness", done: (a) => Array.isArray(a.documents) && a.documents.length > 0 },
+            { key: "logistics", label: "Logistics understanding", done: (a) => hasTruthy(a.deliverToUK) },
+            { key: "financial", label: "Financial readiness", done: (a) => hasTruthy(a.exportPricing) },
+            {
+                key: "compliance_confirmation",
+                label: "Compliance confirmation",
+                done: (a) => String(a.confirmAccuracy || "") === "yes" && String(a.agreeCompliance || "") === "yes",
+            },
+        ];
+        // Enforce ordered funnel progression so stage counts are always monotonic.
+        // A user only counts for stage N if all stages 0..N are complete.
+        const stageCompletionCounts = new Array(stages.length).fill(0);
+        for (const assessment of assessments) {
+            let lastSequentialStage = -1;
+            for (let i = 0; i < stages.length; i += 1) {
+                if (stages[i].done(assessment)) {
+                    lastSequentialStage = i;
+                    continue;
+                }
+                break;
+            }
+            if (lastSequentialStage >= 0) {
+                for (let i = 0; i <= lastSequentialStage; i += 1) {
+                    stageCompletionCounts[i] += 1;
+                }
+            }
+        }
+        let previousCount = null;
+        const stageCounts = stages.map((stage, idx) => {
+            const count = stageCompletionCounts[idx] || 0;
+            const conversionFromPrevious = assessmentConversionRate(count, previousCount);
+            const dropoffFromPrevious = previousCount == null ? null : Math.max(0, previousCount - count);
+            previousCount = count;
+            return {
+                key: stage.key,
+                label: stage.label,
+                count,
+                conversionFromPrevious,
+                dropoffFromPrevious,
+            };
+        });
+        const totalStarted = stageCounts[0]?.count || 0;
+        const completed = stageCounts[stageCounts.length - 1]?.count || 0;
+        const completionRate = totalStarted > 0 ? Math.round((completed / totalStarted) * 10000) / 100 : 0;
+        res.status(200).json({
+            success: true,
+            data: {
+                range,
+                dateWindow: { from: from.toISOString(), to: now.toISOString() },
+                summary: {
+                    totalStarted,
+                    completed,
+                    completionRate,
+                },
+                stages: stageCounts,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Admin assessment dropoff analytics error:", error);
+        res.status(500).json({ success: false, message: error?.message || "Failed to load assessment drop-off analytics." });
+    }
+});
 function escapeAdminSearchRegex(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

@@ -779,6 +779,25 @@ export type AdminSearchData = {
   producers: Array<{ _id: string; name?: string; email?: string }>;
 };
 
+export type AssessmentDropoffRange = '7d' | '30d' | '90d';
+
+export type AssessmentDropoffAnalytics = {
+  range: AssessmentDropoffRange;
+  dateWindow: { from: string; to: string };
+  summary: {
+    totalStarted: number;
+    completed: number;
+    completionRate: number;
+  };
+  stages: Array<{
+    key: string;
+    label: string;
+    count: number;
+    conversionFromPrevious: number | null;
+    dropoffFromPrevious: number | null;
+  }>;
+};
+
 export const adminAPI = {
   search: async (q: string, opts?: { scope?: AdminSearchScope }) => {
     const params = new URLSearchParams({ q });
@@ -804,6 +823,12 @@ export const adminAPI = {
   },
   getStats: async () => {
     return adminRequest<{ success: boolean; data: any }>('/admin/stats');
+  },
+  getAssessmentDropoffAnalytics: async (range: AssessmentDropoffRange = '30d') => {
+    const params = new URLSearchParams({ range });
+    return adminRequest<{ success: boolean; data: AssessmentDropoffAnalytics }>(
+      `/admin/analytics/assessment-dropoff?${params.toString()}`
+    );
   },
   getBuyerRequests: async () => {
     return adminRequest<{ success: boolean; data: any[] }>('/admin/buyer-requests');

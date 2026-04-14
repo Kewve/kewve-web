@@ -5,10 +5,14 @@ import { sendEmail } from '@/utils/emailConfig';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 const BASE_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
+const normalizedBackendBase = BACKEND_URL.endsWith('/api')
+  ? BACKEND_URL.slice(0, -4)
+  : BACKEND_URL;
+
 export async function requestPasswordReset(email: string) {
   try {
     // Call backend to generate reset token
-    const response = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+    const response = await fetch(`${normalizedBackendBase}/api/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
