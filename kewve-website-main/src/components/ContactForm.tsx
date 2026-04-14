@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
+import Script from 'next/script';
 import { formSubmissionAction } from '@/actions';
 import { cn, josefinSemiBold } from '@/utils';
 import { GDPR } from '@/lib/gdprCopy';
@@ -27,11 +28,29 @@ function SubmitButton() {
 }
 
 const FEEDBACK_MS = 4500;
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        selector: string | HTMLElement,
+        options: { sitekey: string; callback: (token: string) => void; 'expired-callback'?: () => void }
+      ) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
 
 export default function ContactForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const [state, action] = useFormState(formSubmissionAction, {
     message: '',
     error: false,
@@ -50,18 +69,53 @@ export default function ContactForm() {
         messageRef.current.value = '';
       }
     }
+    setCaptchaToken('');
+    if (turnstileWidgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetIdRef.current);
+    }
 
     setFeedbackVisible(true);
     const t = window.setTimeout(() => setFeedbackVisible(false), FEEDBACK_MS);
     return () => window.clearTimeout(t);
   }, [state]);
 
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+    if (!turnstileReady) return;
+    if (!window.turnstile || !turnstileContainerRef.current) return;
+    if (turnstileWidgetIdRef.current) return;
+
+    turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token: string) => setCaptchaToken(token),
+      'expired-callback': () => setCaptchaToken(''),
+    });
+  }, [turnstileReady]);
+
+  useEffect(() => {
+    return () => {
+      if (turnstileWidgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetIdRef.current);
+      }
+    };
+  }, []);
+
   const labelClass = `text-[#1a1a1a] ${josefin.className}`;
   const fieldClass = 'bg-white text-[#1a1a1a] border border-black';
 
   return (
     <div className='w-full max-w-xl mx-auto'>
+      {TURNSTILE_SITE_KEY ? (
+        <Script
+          src='https://challenges.cloudflare.com/turnstile/v0/api.js'
+          async
+          defer
+          onLoad={() => setTurnstileReady(true)}
+        />
+      ) : null}
       <form ref={formRef} action={action} className='flex flex-col gap-4'>
+        <input type='text' name='company_website' tabIndex={-1} autoComplete='off' className='hidden' />
+        <input type='hidden' name='captchaToken' value={captchaToken} />
         <div className='flex flex-col gap-2'>
           <Label htmlFor='contact-account-type' className={labelClass}>
             I&apos;m interested as
@@ -188,6 +242,11 @@ export default function ContactForm() {
             })()}
           </span>
         </label>
+        {TURNSTILE_SITE_KEY ? (
+          <div className='pt-1'>
+            <div ref={turnstileContainerRef} />
+          </div>
+        ) : null}
         <div className='flex justify-center sm:justify-start pt-1'>
           <SubmitButton />
         </div>
